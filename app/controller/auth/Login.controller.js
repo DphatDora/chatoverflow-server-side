@@ -5,7 +5,8 @@ const Credential = require('../../models/Credential.model');
 
 exports.testLogin = (req, res) => res.send('Login controller called');
 
-//placeholder logic write by chatgpt,just for testing --HAVE"T AUDITED SO CHECK WITH CAUTION !!!---
+// placeholder logic write by chatgpt, dirty code without service call,
+// just for testing --HAVE"T AUDITED SO CHECK WITH CAUTION !!!---
 exports.login = async (req, res) => {
    try {
       const { email, password } = req.body;

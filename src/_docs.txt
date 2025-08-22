@@ -1,0 +1,1 @@
+Src folder will hold directories like CSS and JavaScript which could be customized as per needs.

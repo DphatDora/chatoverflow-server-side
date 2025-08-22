@@ -7,7 +7,12 @@ var logger = require('morgan');
 var indexRouter = require('./app/routes/index');
 var usersRouter = require('./app/routes/users');
 
+var connectMongo = require('./app/database/init');
+
 var app = express();
+// we need initial db connection RIGHT BEFORE before mounting your routes
+// i remember one time, i run into a problem that the connection was call multiple times
+connectMongo();
 
 // view engine setup
 app.set('views', path.join(__dirname, 'app/views'));
