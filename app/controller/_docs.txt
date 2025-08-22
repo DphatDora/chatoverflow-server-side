@@ -1,0 +1,10 @@
+Again, ya'll know what is this, ob vi ous ly....
+
+We all know that we have two ways to structure this one, 
+1. Write some huge controller and wrap all the related login into it:
+    ├── App.controller.js
+    ├── User.controller.js
+2. Sepreate them as in our project
+
+I choose the 2rh ways because it make our workflow seprately, so you don't want another guys to modify your work-on controller. 
+
