@@ -1,0 +1,4 @@
+├── db.conf.js     ← Database-specific configurations like Host, Port & Name.
+├── app.conf.js    ← Acceptable Request Payload Size, Blacklisting IPs or Regions, etc.
+├── auth.conf.js   ← OAuth Callback URLs, etc.
+└── init.js        ← load everything (db, app configs)

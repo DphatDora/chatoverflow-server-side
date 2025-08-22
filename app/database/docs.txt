@@ -1,0 +1,2 @@
+- Mongo.database.js: Init connection to mongodb & implement failure handler.
+- Then connectors should be loaded under initialization files init.js.

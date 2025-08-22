@@ -65,6 +65,13 @@ Install the project dependencies using pnpm:
 pnpm install
 ```
 
+**Connect Database**
+You need to create your dotenv environment variables and establish your mongodb connection.
+
+```bash
+MONGODB_URI = 'your mongodb connection URI'
+```
+
 **Running the Project**
 
 ```bash
