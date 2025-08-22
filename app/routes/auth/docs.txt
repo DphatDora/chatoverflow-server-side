@@ -1,0 +1,11 @@
+Auth routes like login, signup... are breaked into separate files, which eventually combined by index.js
+
+So:
+auth/login -> point to login
+auth/signup -> point to signup
+
+`app.js` use `auth/index.js` as `/auth` so we finnaly have `www..../auth/login`
+
+
+-------These auth route is POST JUST FOR EZ TO TESTING, PLEASE CHANGE THE METHOD LATER.-----
+-------Ohter route include feed, use... just for demo-----

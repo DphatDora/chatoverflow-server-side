@@ -79,3 +79,11 @@ pnpm run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) in your browser to takle with the server.
+
+**Route map**
+
+```
+http://localhost:3000/auth/login
+http://localhost:3000/auth/signup
+...
+```
