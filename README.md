@@ -66,7 +66,7 @@ pnpm install
 ```
 
 **Connect Database**
-You need to create your dotenv environment variables and establish your mongodb connection.
+You need to create your .env file and establish your mongodb connection. See `sample/.env.sample`
 
 ```bash
 MONGODB_URI = 'your mongodb connection URI'
