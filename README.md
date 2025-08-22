@@ -87,3 +87,7 @@ http://localhost:3000/auth/login
 http://localhost:3000/auth/signup
 ...
 ```
+
+> [!NOTE]
+> For dev member, you need to folk this repo and follow the open-source workflow to contribute.
+> Simply `folk` &rarr; `commit changes` &rarr; `open pull request`.
