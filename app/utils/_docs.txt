@@ -1,0 +1,3 @@
+Your app may have several utility functions, like Logging important information, 
+or something which are static and have no relevance to other classes/files, as opposed to Helpers (defined later in this post) 
+which may help other classes or modules in your app.
