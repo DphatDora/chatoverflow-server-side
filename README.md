@@ -45,7 +45,7 @@ Our server is live at [ChatOverflow-Server-Side](https://nvhoaidt.vercel.app/). 
 
 **Prerequisites**
 
-This project was build with Next.js, so make sure you have the following installed on your machine:
+This project was build with Node.js, so make sure you have the following installed on your machine:
 
 -  [Git](https://git-scm.com/)
 -  [Node.js](https://nodejs.org/en)
