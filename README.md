@@ -37,6 +37,10 @@ Some highlights include:
 
 ## Running Locally
 
+> [!NOTE]
+> For dev member, you need to folk this repo and follow the open-source workflow to contribute.
+> Simply `folk` &rarr; `commit changes` &rarr; `open pull request`.
+
 Our server is live at [ChatOverflow-Server-Side](https://nvhoaidt.vercel.app/). For running locally, follow these steps to set up the project on your machine.
 
 **Prerequisites**
@@ -74,8 +78,16 @@ MONGODB_URI = 'your mongodb connection URI'
 
 **Running the Project**
 
+Run with nodemon:
+
 ```bash
 pnpm run dev
+```
+
+Run with plain node:
+
+```bash
+pnpm start
 ```
 
 Open [http://localhost:3000](http://localhost:3000) in your browser to takle with the server.
@@ -87,7 +99,3 @@ http://localhost:3000/auth/login
 http://localhost:3000/auth/signup
 ...
 ```
-
-> [!NOTE]
-> For dev member, you need to folk this repo and follow the open-source workflow to contribute.
-> Simply `folk` &rarr; `commit changes` &rarr; `open pull request`.
