@@ -1,4 +1,4 @@
-const forgotPasswordService = require('../../services/auth/ForgotPassword.Service');
+const forgotPasswordService = require('../../services/auth/ForgotPassword.service');
 const OTPService = require('../../services/common/OTP.service');
 const User = require('../../models/User.model');
 const UserPasswordReset = require('../../models/User.PasswordReset.model');
