@@ -93,9 +93,19 @@ pnpm start
 Open [http://localhost:3000](http://localhost:3000) in your browser to takle with the server.
 
 **Route map**
-
 ```
 http://localhost:3000/auth/login
 http://localhost:3000/auth/signup
-...
+http://localhost:3000/auth/forgot-password
 ```
+
+**Tesing**
+Forgot password:
+```
+POST /auth/forgot-password/send-otp &rarr body { email }
+POST /auth/forgot-password/verify-otp &rarr body { email, otp }
+POST /auth/forgot-password/reset-password &rarr body { resetToken, newPassword }
+```
+
+
+
