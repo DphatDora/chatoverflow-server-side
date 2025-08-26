@@ -6,7 +6,6 @@ const UserPasswordReset = require("../../models/User.PasswordReset.model");
 async function resetPassword(resetToken, newPassword) {
   try {
     const payload = jwt.verify(resetToken, process.env.JWT_SECRET);
-
     const user = await User.findById(payload.userId);
     if (!user) {
       throw new Error("Không tìm thấy user");
@@ -14,7 +13,7 @@ async function resetPassword(resetToken, newPassword) {
 
     const hashedPassword = await bcrypt.hash(newPassword, 10);
 
-    user.passwordHash = hashedPassword;
+    user.password = hashedPassword;
     await user.save();
 
     // Clean up OTP records

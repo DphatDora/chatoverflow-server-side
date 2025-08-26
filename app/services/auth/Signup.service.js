@@ -82,7 +82,7 @@ async function verifySignup(email, otpInput) {
     // Update user status to active and store password directly
     await User.findByIdAndUpdate(user._id, {
       status: "active",
-      passwordHash: user.tempPasswordHash,
+      password: user.tempPasswordHash,
       $unset: { tempPasswordHash: 1 },
     });
 
