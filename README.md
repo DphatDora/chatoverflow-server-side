@@ -70,11 +70,59 @@ pnpm install
 ```
 
 **Connect Database**
-You need to create your .env file and establish your mongodb connection. See `sample/.env.sample`
+
+You need to create your .env file and establish your mongodb connection.
+
+**Setup `.env`**
+
+See example in `sample/.env.sample`. You'll need to create your own `.env` file and fullfill it with your own.
+
+### Basic Configuration
+```bash
+MONGODB_URI= your_mongodb_connection_URI
+JWT_SECRET= your_super_secret_jwt_key_min_32_chars
+JWT_EXPIRES=7d
+```
+
+### **Email Configuration**
+Configure email settings for OTP authentication:
 
 ```bash
-MONGODB_URI = 'your mongodb connection URI'
+EMAIL_USER=your.email@gmail.com
+EMAIL_PASS=abcdefghijklmnop
 ```
+
+#### **Setup Gmail App Password**
+
+Follow these steps to configure `EMAIL_USER` and `EMAIL_PASS`:
+
+**Step 1: Sign in to Google Account**
+1. Visit [Google Account](https://myaccount.google.com) and log in with your Gmail account
+2. Navigate to **Security**
+
+**Step 2: Enable 2-Step Verification**
+1. Find **2-Step Verification** under the "Signing in to Google" section
+2. Enable it if you haven't already
+
+**Step 3: Create an App Password**
+1. Scroll down and look for **App passwords**
+2. Click on **App passwords** (you may need to log in again)
+3. Choose the app (e.g., Mail) and device (or select **Other** and enter a custom name like "ChatOverflow")
+4. Click **Generate**
+
+**Step 4: Copy App Password**
+1. Google will generate a 16-character app password (e.g., `abcd efgh ijkl mnop`)
+2. Copy and save it safely — it will only be shown once
+ 
+### **Complete `.env` Example**
+```bash
+MONGODB_URI=mongodb://localhost:27017/chatoverflow
+JWT_SECRET=your_super_secret_jwt_key_min_32_chars
+JWT_EXPIRES=7d
+EMAIL_USER=your.email@gmail.com
+EMAIL_PASS=abcdefghijklmnop
+```
+
 
 **Running the Project**
 
@@ -93,6 +141,7 @@ pnpm start
 Open [http://localhost:3000](http://localhost:3000) in your browser to takle with the server.
 
 **Route map**
+
 ```
 http://localhost:3000/auth/login
 http://localhost:3000/auth/signup
@@ -101,11 +150,10 @@ http://localhost:3000/auth/forgot-password
 
 **Tesing**
 Forgot password:
+
 ```
 POST /auth/forgot-password/send-otp &rarr body { email }
 POST /auth/forgot-password/verify-otp &rarr body { email, otp }
 POST /auth/forgot-password/reset-password &rarr body { resetToken, newPassword }
 ```
-
-
 
