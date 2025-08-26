@@ -2,6 +2,7 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const User = require('../../models/User.model');
 const UserPasswordReset = require('../../models/User.PasswordReset.model');
+const Credential = require('../../models/Credential.model');
 
 async function resetPassword(resetToken, newPassword) {
     try {
@@ -15,7 +16,7 @@ async function resetPassword(resetToken, newPassword) {
         const hashedPassword = await bcrypt.hash(newPassword, 10);
         
         // Update password in Credential model instead of User
-        const Credential = require('../../models/Credential.model');
+
         await Credential.findOneAndUpdate(
             { userId: user._id },
             { passwordHash: hashedPassword }
