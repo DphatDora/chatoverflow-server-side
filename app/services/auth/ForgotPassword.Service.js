@@ -13,7 +13,7 @@ async function resetPassword(resetToken, newPassword) {
 
     const hashedPassword = await bcrypt.hash(newPassword, 10);
 
-    user.passwordHash = hashedPassword;
+    user.password = hashedPassword;
     await user.save();
 
     // Clean up OTP records
