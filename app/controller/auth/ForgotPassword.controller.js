@@ -4,10 +4,16 @@ const User = require("../../models/User.model");
 const UserPasswordReset = require("../../models/User.PasswordReset.model");
 const ApiResponse = require("../../dto/res/api.response");
 const jwt = require("jsonwebtoken");
+const  {isValidEmail}  = require("../../utils/validator");
 
-exports.sendOTP = async (req, res) => {
+exports.requestOTP = async (req, res) => {
   try {
     const { email } = req.body;
+
+    const checkEmail = isValidEmail(email);
+    if (!checkEmail.valid) {
+      return res.status(200).json(ApiResponse.error(checkEmail.error));
+    }
 
     const result = await OTPService.sendOTP(
       email,
@@ -16,69 +22,44 @@ exports.sendOTP = async (req, res) => {
       "reset",
       {
         userQuery: { status: { $in: ["active", "inactive"] } },
-        userNotFoundMessage: "Email không tồn tại",
+        userNotFoundMessage: "Email not exist",
       }
     );
 
     if (!result.success) {
-      return res.status(400).json(ApiResponse.error(result.message));
+      return res.status(200).json(ApiResponse.error(result.message));
     }
 
-    return res.status(200).json(ApiResponse.success(result.message, { email }));
-  } catch (error) {
-    return res.status(400).json(ApiResponse.error(error.message));
+    return res.status(200).json(ApiResponse.success("OTP has been sent", { email }));
+  } catch (err) {
+    return res.status(400).json(ApiResponse.error(err.message));
   }
 };
 
-exports.verifyOTP = async (req, res) => {
+exports.resetPasswordWithOTP = async (req, res) => {
   try {
-    const { email, otp } = req.body;
+    const { email, otp, newPassword } = req.body;
 
-    const result = await OTPService.verifyOTP(
-      email,
-      otp,
-      User,
-      UserPasswordReset,
-      {
-        userQuery: { status: { $in: ["active", "inactive"] } },
-        maxAttempts: 5,
-      }
-    );
+    // Verify OTP
+    const verifyResult = await OTPService.verifyOTP(email, otp, User, UserPasswordReset, {
+      userQuery: { status: { $in: ['active', 'inactive'] } },
+      maxAttempts: 5,
+    });
 
-    if (!result.success) {
-      return res.status(400).json(ApiResponse.error(result.message));
+    if (!verifyResult.success) {
+      return res.status(200).json(ApiResponse.error(verifyResult.message));
     }
 
-    // Generate reset token
-    const token = jwt.sign(
-      { userId: result.user._id },
-      process.env.JWT_SECRET,
-      { expiresIn: "10m" }
-    );
+    // Reset password
+    const resetResult = await forgotPasswordService.resetPasswordByUser(verifyResult.user, newPassword);
 
-    return res
-      .status(200)
-      .json(
-        ApiResponse.success("OTP xác thực thành công", { resetToken: token })
-      );
-  } catch (error) {
-    return res.status(400).json(ApiResponse.error(error.message));
-  }
-};
+    if (!resetResult.success) {
+      return res.status(200).json(ApiResponse.error(resetResult.message));
+    }
 
-exports.resetPassword = async (req, res) => {
-  try {
-    const { resetToken, newPassword } = req.body;
-
-    const result = await forgotPasswordService.resetPassword(
-      resetToken,
-      newPassword
-    );
-
-    return res
-      .status(200)
-      .json(ApiResponse.success(result.message, result.data));
-  } catch (error) {
-    return res.status(400).json(ApiResponse.error(error.message));
+    return res.status(200).json(ApiResponse.success(resetResult.message, resetResult.data));
+  } catch (err) {
+    console.error('Reset password error:', err);
+    return res.status(500).json(ApiResponse.error('System Error'));
   }
 };
