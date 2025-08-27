@@ -13,7 +13,7 @@ async function connectMongo() {
 
       // instead of call the database name by mongoose which potentially failure if connect haven't established
       // we can call it by an established connection
-      console.log('Databse name: ', connection.connection.db.databaseName);
+      // console.log('Databse name: ', connection.connection.db.databaseName);
    } catch (err) {
       console.error('MongoDB connection failure:', err.message);
       process.exit(1);
