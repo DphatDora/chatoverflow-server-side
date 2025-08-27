@@ -33,6 +33,7 @@ module.exports = async (req, res) => {
    // Main API
    try {
       await connectMongo();
+      console.log('MongoDB successfully connected');
       return app(req, res);
    } catch (err) {
       console.error('Error in API handler:', err);
