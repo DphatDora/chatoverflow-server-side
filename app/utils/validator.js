@@ -1,10 +1,10 @@
 
 function isValidEmail(email) {
-  if (!email || email.trim() === '') return { valid: false, error: "Email không được để trống" };
+  if (!email || email.trim() === '') return { valid: false, error: "Email cannot be empty" };
 
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   if (!emailRegex.test(email)) {
-    return { valid: false, error: "Email không hợp lệ" };
+    return { valid: false, error: "Email is not valid" };
   }
 
   return { valid: true };
@@ -12,13 +12,13 @@ function isValidEmail(email) {
 
 function isValidPassword(password) {
   if (!password || password.trim() === '') {
-    return { valid: false, error: "Mật khẩu không được để trống" };
+    return { valid: false, error: "Password cannot be empty" };
   }
   if (password.length < 6) {
-    return { valid: false, error: "Mật khẩu phải có ít nhất 6 ký tự" };
+    return { valid: false, error: "Password must be at least 6 characters" };
   }
   if (password.length > 100) {
-    return { valid: false, error: "Mật khẩu không được vượt quá 100 ký tự" };
+    return { valid: false, error: "Password cannot exceed 100 characters" };
   }
   return { valid: true };
 }

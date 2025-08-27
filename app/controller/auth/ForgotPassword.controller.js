@@ -22,7 +22,7 @@ exports.requestOTP = async (req, res) => {
       "reset",
       {
         userQuery: { status: { $in: ["active", "inactive"] } },
-        userNotFoundMessage: "Email không tồn tại",
+        userNotFoundMessage: "Email not exist",
       }
     );
 
@@ -30,7 +30,7 @@ exports.requestOTP = async (req, res) => {
       return res.status(200).json(ApiResponse.error(result.message));
     }
 
-    return res.status(200).json(ApiResponse.success("OTP đã được gửi", { email }));
+    return res.status(200).json(ApiResponse.success("OTP has been sent", { email }));
   } catch (err) {
     return res.status(400).json(ApiResponse.error(err.message));
   }
@@ -40,30 +40,26 @@ exports.resetPasswordWithOTP = async (req, res) => {
   try {
     const { email, otp, newPassword } = req.body;
 
-    const verifyResult = await OTPService.verifyOTP(
-      email,
-      otp,
-      User,
-      UserPasswordReset,
-      {
-        userQuery: { status: { $in: ["active", "inactive"] } },
-        maxAttempts: 5,
-      }
-    );
+    // Verify OTP
+    const verifyResult = await OTPService.verifyOTP(email, otp, User, UserPasswordReset, {
+      userQuery: { status: { $in: ['active', 'inactive'] } },
+      maxAttempts: 5,
+    });
 
     if (!verifyResult.success) {
       return res.status(200).json(ApiResponse.error(verifyResult.message));
     }
 
-    const resetResult = await forgotPasswordService.resetPasswordByUser(
-      verifyResult.user,
-      newPassword
-    );
+    // Reset password
+    const resetResult = await forgotPasswordService.resetPasswordByUser(verifyResult.user, newPassword);
 
-    return res
-      .status(200)
-      .json(ApiResponse.success(resetResult.message, resetResult.data));
+    if (!resetResult.success) {
+      return res.status(200).json(ApiResponse.error(resetResult.message));
+    }
+
+    return res.status(200).json(ApiResponse.success(resetResult.message, resetResult.data));
   } catch (err) {
-    return res.status(400).json(ApiResponse.error(err.message));
+    console.error('Reset password error:', err);
+    return res.status(500).json(ApiResponse.error('System Error'));
   }
 };

@@ -6,7 +6,10 @@ async function resetPasswordByUser(user, newPassword) {
 
   const checkPassword = isValidPassword(newPassword);
   if (!checkPassword.valid) {
-    return { success: false, message: checkPassword.error };
+    return { 
+      success: false, 
+      message: checkPassword.error,
+      data: null};
   }
 
   const hashedPassword = await bcrypt.hash(newPassword, 10);
@@ -18,7 +21,7 @@ async function resetPasswordByUser(user, newPassword) {
 
   return {
     success: true,
-    message: 'Đặt lại mật khẩu thành công',
+    message: 'Reset Password Successfully',
     data: { userId: user._id, email: user.email }
   };
 }
