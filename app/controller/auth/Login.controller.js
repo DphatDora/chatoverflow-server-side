@@ -10,8 +10,8 @@ exports.login = async (req, res) => {
     const response = ApiResponse.success("Login successful", { token });
     res.status(StatusCodes.OK).json(response);
   } catch (error) {
-    let statusCode = StatusCodes.INTERNAL_SERVER_ERROR;
-    let message = ReasonPhrases.INTERNAL_SERVER_ERROR;
+    let statusCode = error.statusCode || StatusCodes.INTERNAL_SERVER_ERROR;
+    let message = error.message || ReasonPhrases.INTERNAL_SERVER_ERROR;
 
     if (error.message === "Invalid credentials") {
       statusCode = StatusCodes.UNAUTHORIZED;
