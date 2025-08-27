@@ -23,9 +23,20 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
+const allowedOrigins = [
+   'http://localhost:5173',
+   'https://chatoverflow-client.vercel.app',
+];
+
 app.use(
    cors({
-      origin: process.env.CLIENT_URL || 'http://localhost:5173',
+      origin: function (origin, callback) {
+         if (allowedOrigins.indexOf(origin) !== -1) {
+            callback(null, true);
+         } else {
+            callback(new Error('Not allowed by CORS'));
+         }
+      },
       credentials: true,
    })
 );
