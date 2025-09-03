@@ -5,23 +5,38 @@ async function getNewest(limit = 20) {
   return Question.find()
     .sort({ createdAt: -1 })
     .limit(limit)
-    .populate("user", "name avatar");
+    .populate("user", "name avatar")
+    .populate("answerCount");
 }
 
 async function getTrending(limit = 20) {
-  const questions = await Question.aggregate([
+  return Question.aggregate([
     {
       $addFields: {
         upvoteCount: { $size: "$upvotedBy" },
       },
     },
     {
-      $sort: { views: -1, upvoteCount: -1 },
+      $lookup: {
+        from: "answers",
+        localField: "_id",
+        foreignField: "question",
+        as: "answers",
+      },
     },
+    {
+      $addFields: {
+        answerCount: { $size: "$answers" },
+      },
+    },
+    { $sort: { views: -1, upvoteCount: -1 } },
     { $limit: limit },
+    {
+      $project: {
+        answers: 0,
+      },
+    },
   ]);
-
-  return Question.populate(questions, { path: "user", select: "name avatar" });
 }
 
 async function getUnanswered(limit = 20) {
@@ -34,9 +49,12 @@ async function getUnanswered(limit = 20) {
         as: "answers",
       },
     },
-    { $match: { answers: { $size: 0 } } },
+    { $match: { "answers.0": { $exists: false } } },
     { $sort: { createdAt: -1 } },
     { $limit: limit },
+    {
+      $addFields: { answerCount: 0 },
+    },
   ]);
 }
 

@@ -11,7 +11,13 @@ const QuestionSchema = new mongoose.Schema(
     downvotedBy: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
     user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
   },
-  { timestamps: true }
+  { timestamps: true, toJSON: { virtuals: true }, toObject: { virtuals: true } }
 );
 
+QuestionSchema.virtual("answerCount", {
+  ref: "Answer",
+  localField: "_id",
+  foreignField: "question",
+  count: true,
+});
 module.exports = mongoose.model("Question", QuestionSchema);
