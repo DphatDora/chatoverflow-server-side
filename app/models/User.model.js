@@ -1,20 +1,28 @@
 const mongoose = require("mongoose");
+const bcrypt = require("bcrypt");
 
 const UserSchema = new mongoose.Schema(
-   {
-      name: { type: String, required: true },
-      nickName: String,
-      email: { type: String, required: true, unique: true },
-      password: { type: String, required: false },     
-      avatar: String,
-      status: {
-         type: String,
-         enum: ["active", "inactive", "banned", "pending"], // thêm pending cho tài khoản chưa verify
-         default: "pending" // mặc định là pending khi đăng ký
-      },
-      tempPasswordHash: String  // Temporary storage for signup process
-   },
-   { timestamps: true }
+  {
+    name: { type: String, required: true },
+    nickName: String,
+    email: { type: String, required: true, unique: true },
+    password: { type: String, required: false },
+    avatar: String,
+    dateOfBirth: { type: Date },
+    address: String,
+    gender: {
+      type: String,
+      enum: ["male", "female", "other"],
+      default: "other",
+    },
+    status: {
+      type: String,
+      enum: ["active", "inactive", "banned", "pending"], // thêm pending cho tài khoản chưa verify
+      default: "pending", // mặc định là pending khi đăng ký
+    },
+    tempPasswordHash: String, // Temporary storage for signup process
+  },
+  { timestamps: true }
 );
 
 UserSchema.methods.comparePassword = function (plain) {
