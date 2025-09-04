@@ -10,5 +10,5 @@ exports.login = async ({ email, password }) => {
 
   const token = signUserId(user._id, { email: user.email });
 
-  return token;
+  return { user, token };
 };
