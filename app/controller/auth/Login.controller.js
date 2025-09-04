@@ -7,9 +7,19 @@ const { NewLoginResponse } = require("../../dto/res/login.response");
 exports.login = async (req, res) => {
   try {
     const loginReq = new LoginRequest(req.body);
-    const { user, token } = await authService.login(loginReq);
+    const { user, accessToken, refreshToken } = await authService.login(
+      loginReq
+    );
 
-    const loginResponse = NewLoginResponse(user, token);
+    // Set refresh token as httpOnly cookie
+    res.cookie("refreshToken", refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV,
+      sameSite: "strict",
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    });
+
+    const loginResponse = NewLoginResponse(user, accessToken);
     const response = ApiResponse.success("Login successfully", loginResponse);
 
     res.status(StatusCodes.OK).json(response);

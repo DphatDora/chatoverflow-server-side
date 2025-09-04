@@ -1,3 +1,5 @@
+require("dotenv").config();
+
 var createError = require("http-errors");
 var express = require("express");
 var path = require("path");
@@ -7,7 +9,7 @@ var cors = require("cors");
 var indexRouter = require("./app/routes/index");
 var usersRouter = require("./app/routes/users");
 var connectMongo = require("./app/database/init");
-require("dotenv").config();
+
 
 var app = express();
 
