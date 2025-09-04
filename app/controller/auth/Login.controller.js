@@ -11,12 +11,14 @@ exports.login = async (req, res) => {
       loginReq
     );
 
-    // Set refresh token as httpOnly cookie
+    const refreshTokenMaxAge =
+      parseInt(process.env.REFRESH_TOKEN_EXPIRES, 10) * 60 * 1000;
+
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
-      secure: process.env.NODE_ENV,
+      secure: process.env.NODE_ENV === "production",
       sameSite: "strict",
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+      maxAge: refreshTokenMaxAge,
     });
 
     const loginResponse = NewLoginResponse(user, accessToken);
