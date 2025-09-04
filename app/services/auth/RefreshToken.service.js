@@ -14,7 +14,7 @@ exports.refreshToken = async (refreshToken) => {
 
   const user = tokenDoc.userId;
 
-  const newAccessToken = signAccessToken(user._id, { email: user.email });
+  const newAccessToken = signAccessToken(user._id);
 
   // Generate new refresh token
   const newRefreshToken = generateRefreshToken();
