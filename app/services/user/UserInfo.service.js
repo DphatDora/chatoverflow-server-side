@@ -4,9 +4,8 @@ const bcrypt = require("bcrypt");
 async function getUserInfo(userId) {
   try {
     const user = await User.findById(userId).select(
-      "-passwordHash -tempPasswordHash -__v"
+      "-password -tempPasswordHash -__v"
     );
-
     if (!user || user.status !== "active") {
       return {
         success: false,
