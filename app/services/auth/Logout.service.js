@@ -1,4 +1,3 @@
-const bcrypt = require("bcryptjs");
 const userRepository = require("../../repository/auth.repository");
 
 exports.logout = async (refreshToken) => {

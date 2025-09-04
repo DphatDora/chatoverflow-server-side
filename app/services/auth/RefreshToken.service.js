@@ -9,6 +9,7 @@ exports.refreshToken = async (refreshToken) => {
   }
 
   const user = tokenDoc.userId;
+
   const newAccessToken = signAccessToken(user._id);
 
   return newAccessToken;
