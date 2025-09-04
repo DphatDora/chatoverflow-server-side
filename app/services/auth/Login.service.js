@@ -1,6 +1,10 @@
 const bcrypt = require("bcryptjs");
 const userRepository = require("../../repository/auth.repository");
-const { signUserId } = require("../../utils/jwt");
+const {
+  signAccessToken,
+  generateRefreshToken,
+  getRefreshTokenExpiry,
+} = require("../../utils/jwt");
 
 exports.login = async ({ email, password }) => {
   const user = await userRepository.findUserByEmail(email, true);
@@ -8,7 +12,20 @@ exports.login = async ({ email, password }) => {
     throw new Error("Invalid credentials");
   }
 
-  const token = signUserId(user._id, { email: user.email });
+  const accessToken = signAccessToken(user._id, { email: user.email });
 
-  return { user, token };
+  const refreshToken = generateRefreshToken();
+  const refreshTokenExpiry = getRefreshTokenExpiry();
+
+  await userRepository.createRefreshToken(
+    user._id,
+    refreshToken,
+    refreshTokenExpiry
+  );
+
+  return {
+    user: user,
+    accessToken,
+    refreshToken,
+  };
 };
