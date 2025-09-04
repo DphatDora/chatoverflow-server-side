@@ -12,7 +12,7 @@ exports.login = async ({ email, password }) => {
     throw new Error("Invalid credentials");
   }
 
-  const accessToken = signAccessToken(user._id, { email: user.email });
+  const accessToken = signAccessToken(user._id);
 
   const refreshToken = generateRefreshToken();
   const refreshTokenExpiry = getRefreshTokenExpiry();

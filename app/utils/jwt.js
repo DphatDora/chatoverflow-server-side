@@ -6,16 +6,10 @@ const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET;
 const ACCESS_TOKEN_EXPIRES = process.env.ACCESS_TOKEN_EXPIRES;
 const REFRESH_TOKEN_EXPIRES = process.env.REFRESH_TOKEN_EXPIRES;
 
-exports.signAccessToken = (userId, payload = {}) => {
-  return jwt.sign(
-    {
-      userId,
-      type: "access",
-      ...payload,
-    },
-    JWT_ACCESS_SECRET,
-    { expiresIn: ACCESS_TOKEN_EXPIRES }
-  );
+exports.signAccessToken = (userId) => {
+  return jwt.sign({ sub: String(userId) }, JWT_ACCESS_SECRET, {
+    expiresIn: ACCESS_TOKEN_EXPIRES,
+  });
 };
 
 exports.generateRefreshToken = () => {
