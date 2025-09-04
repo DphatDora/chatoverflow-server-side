@@ -12,16 +12,7 @@ exports.refreshToken = async (req, res) => {
         .json(ApiResponse.error("Refresh token not provided"));
     }
 
-    const { accessToken, refreshToken: newRefreshToken } =
-      await authService.refreshToken(refreshToken);
-
-    // Set new refresh token cookie
-    res.cookie("refreshToken", newRefreshToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV,
-      sameSite: "strict",
-      maxAge: 7 * 24 * 60 * 60 * 1000,
-    });
+    const accessToken = await authService.refreshToken(refreshToken);
 
     const response = ApiResponse.success("Token refreshed successfully", {
       accessToken,
