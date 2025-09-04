@@ -7,5 +7,6 @@ router.get("/", function (req, res, next) {
 });
 router.use("/auth", require("./auth"));
 router.use("/user", require("./user"));
+router.use("/question", require("./topic"));
 
 module.exports = router;

@@ -28,19 +28,24 @@ const allowedOrigins = [
   "https://chatoverflow-client.vercel.app",
 ];
 
+const allowedOrigins = [
+   'http://localhost:5173',
+   'https://chatoverflow-client.vercel.app',
+];
+
 app.use(
-  cors({
-    origin: function (origin, callback) {
-      // allow requests with no origin postman
-      if (!origin) return callback(null, true);
-      if (allowedOrigins.indexOf(origin) !== -1) {
-        callback(null, true);
-      } else {
-        callback(new Error("Not allowed by CORS"));
-      }
-    },
-    credentials: true,
-  })
+   cors({
+      origin: function (origin, callback) {
+         // allow requests with no origin postman
+         if (!origin) return callback(null, true);
+         if (allowedOrigins.indexOf(origin) !== -1) {
+            callback(null, true);
+         } else {
+            callback(new Error('Not allowed by CORS'));
+         }
+      },
+      credentials: true,
+   })
 );
 
 app.use("/", indexRouter);
