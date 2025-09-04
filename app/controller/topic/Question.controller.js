@@ -34,7 +34,6 @@ async function getQuestions(req, res) {
 async function getQuestionDetail(req, res) {
    try {
       const { id } = req.params;
-      console.log(id);
       const question = await questionService.getQuestionDetail(id);
 
       if (!question) {
