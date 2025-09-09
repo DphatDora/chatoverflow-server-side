@@ -121,28 +121,87 @@ QuestionSchema.post('findOneAndUpdate', async function (doc) {
   }
 });
 
-// Middleware to handle question deletion
-QuestionSchema.pre(
-  'deleteOne',
-  { document: true, query: false },
-  async function () {
-    const Tag = require('./Tag.model');
+// Helper function to decrement tags
+const decrementTags = async (tags) => {
+  const Tag = require('./Tag.model');
 
-    if (this.tags && this.tags.length > 0) {
-      for (const tagName of this.tags) {
-        if (tagName && tagName.trim()) {
-          await Tag.decrementCount(tagName.trim());
-        }
+  if (tags && tags.length > 0) {
+    for (const tagName of tags) {
+      if (tagName && tagName.trim()) {
+        await Tag.decrementCount(tagName.trim());
       }
     }
   }
-);
+};
+
+// Unified middleware to handle question deletion (both document and query level)
+QuestionSchema.pre('deleteOne', async function () {
+  let tagsToDecrement = null;
+
+  // Check if this is a document middleware (has direct access to tags)
+  if (this.tags) {
+    // Document level: instance.deleteOne()
+    tagsToDecrement = this.tags;
+  } else {
+    // Query level: Model.deleteOne() - need to find the document first
+    const docToDelete = await this.model.findOne(this.getQuery());
+    if (docToDelete && docToDelete.tags) {
+      tagsToDecrement = docToDelete.tags;
+    }
+  }
+
+  if (tagsToDecrement) {
+    await decrementTags(tagsToDecrement);
+  }
+});
+
+// Middleware to handle deleteMany - track documents before deletion
+QuestionSchema.pre('deleteMany', async function () {
+  const Tag = require('./Tag.model');
+
+  // Get documents that will be deleted to track their tags
+  const documentsToDelete = await this.model.find(this.getQuery());
+
+  if (documentsToDelete.length > 0) {
+    // Count tags that will be decremented
+    const tagCounts = {};
+    for (const doc of documentsToDelete) {
+      if (doc.tags && doc.tags.length > 0) {
+        for (const tagName of doc.tags) {
+          if (tagName && tagName.trim()) {
+            const cleanTag = tagName.trim();
+            tagCounts[cleanTag] = (tagCounts[cleanTag] || 0) + 1;
+          }
+        }
+      }
+    }
+
+    // Store tag counts for post middleware
+    this._deletedTagCounts = tagCounts;
+  }
+});
 
 QuestionSchema.post('deleteMany', async function (result) {
-  // Note: For deleteMany, we can't easily track which tags to decrement
-  // because we don't have access to the deleted documents
-  // Consider running a tag cleanup job periodically
-  console.log('Warning: deleteMany used - consider running tag cleanup');
+  const Tag = require('./Tag.model');
+
+  // Decrement tag counts based on deleted documents
+  if (
+    this._deletedTagCounts &&
+    Object.keys(this._deletedTagCounts).length > 0
+  ) {
+    for (const [tagName, count] of Object.entries(this._deletedTagCounts)) {
+      await Tag.findOneAndUpdate(
+        { name: tagName.toLowerCase() },
+        { $inc: { questionCount: -count } },
+        { new: true }
+      );
+    }
+    console.log(
+      `✅ Decremented tags for ${result.deletedCount} deleted questions`
+    );
+  } else {
+    console.log('Warning: deleteMany used but no tag cleanup needed');
+  }
 });
 
 module.exports = mongoose.model('Question', QuestionSchema);
