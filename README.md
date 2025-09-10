@@ -31,9 +31,9 @@ Some highlights include:
 
 ## Tech Stack
 
-- Express.js
-- MongoDB
-- ...
+-  Express.js
+-  MongoDB
+-  ...
 
 ## Running Locally
 
@@ -47,9 +47,9 @@ Our server is live at [ChatOverflow-Server-Side](https://nvhoaidt.vercel.app/). 
 
 This project was build with Node.js, so make sure you have the following installed on your machine:
 
-- [Git](https://git-scm.com/)
-- [Node.js](https://nodejs.org/en)
-- [npm, yarm or pnpm (recommended)](https://www.npmjs.com/)
+-  [Git](https://git-scm.com/)
+-  [Node.js](https://nodejs.org/en)
+-  [npm, yarm or pnpm (recommended)](https://www.npmjs.com/)
 
 > [!NOTE]
 > While you can run this project using any package manager, I highly recommend using [`pnpm`](https://pnpm.io/) as your package manager, as it's faster and more efficient than `npm` or `yarn`.
@@ -161,3 +161,140 @@ Forgot password:
 POST /auth/forgot-password { email }
 POST /auth/forgot-password/reset-password &rarr body { email, otp, newPassword }
 ```
+
+**Project Tree**
+
+<details>
+  <summary>View source tree</summary>
+
+```
+chatoverflow-server
+├─ api
+│  └─ index.js
+├─ app
+│  ├─ config
+│  │  ├─ app.conf.js
+│  │  ├─ auth.conf.js
+│  │  ├─ db.conf.js
+│  │  ├─ init.js
+│  │  └─ _docs.txt
+│  ├─ controller
+│  │  ├─ auth
+│  │  │  ├─ ForgotPassword.controller.js
+│  │  │  ├─ Login.controller.js
+│  │  │  ├─ Logout.controller.js
+│  │  │  └─ Signup.controller.js
+│  │  ├─ topic
+│  │  │  ├─ Question.controller.js
+│  │  │  └─ Sample.controller.js
+│  │  ├─ user
+│  │  │  ├─ Sample.controller.js
+│  │  │  └─ UserInfo.controller.js
+│  │  └─ _docs.txt
+│  ├─ database
+│  │  ├─ init.js
+│  │  ├─ Mongo.database.js
+│  │  ├─ seeders
+│  │  │  ├─ seedAnswers.js
+│  │  │  ├─ seedQuestions.js
+│  │  │  └─ seedUsers.js
+│  │  └─ _docs.txt
+│  ├─ dto
+│  │  ├─ Address.dto.js
+│  │  ├─ req
+│  │  │  ├─ login.request.js
+│  │  │  ├─ signup.request.js
+│  │  │  └─ user.request.js
+│  │  └─ res
+│  │     ├─ api.response.js
+│  │     ├─ login.response.js
+│  │     ├─ signup.response.js
+│  │     └─ user.response.js
+│  ├─ middleware
+│  │  ├─ App.middleware.js
+│  │  ├─ ErrorHandler.middleware.js
+│  │  ├─ init.js
+│  │  └─ _docs.txt
+│  ├─ models
+│  │  ├─ Answer.model.js
+│  │  ├─ Credential.model.js
+│  │  ├─ Question.model.js
+│  │  ├─ User.model.js
+│  │  ├─ User.PasswordReset.model.js
+│  │  └─ _docs.txt
+│  ├─ repository
+│  │  ├─ auth.repository.js
+│  │  └─ question.repository.js
+│  ├─ routes
+│  │  ├─ auth
+│  │  │  ├─ docs.txt
+│  │  │  ├─ forgot-password.js
+│  │  │  ├─ index.js
+│  │  │  ├─ login.js
+│  │  │  ├─ logout.js
+│  │  │  └─ signup.js
+│  │  ├─ feed
+│  │  │  ├─ index.js
+│  │  │  ├─ latest.js
+│  │  │  ├─ popular.js
+│  │  │  └─ trending.js
+│  │  ├─ index.js
+│  │  ├─ topic
+│  │  │  ├─ index.js
+│  │  │  ├─ latest.js
+│  │  │  ├─ popular.js
+│  │  │  └─ trending.js
+│  │  ├─ user
+│  │  │  ├─ banned.js
+│  │  │  ├─ blocked.js
+│  │  │  ├─ friend.js
+│  │  │  ├─ index.js
+│  │  │  ├─ info.js
+│  │  │  └─ online.js
+│  │  └─ users.js
+│  ├─ services
+│  │  ├─ auth
+│  │  ├─ common
+│  │  ├─ topic
+│  │  ├─ user
+│  │  └─ _docs.txt
+│  ├─ utils
+│  │  ├─ jwt.js
+│  │  ├─ Logger.util.js
+│  │  ├─ validator.js
+│  │  └─ _docs.txt
+│  └─ views
+│     ├─ documentation
+│     │  └─ index.pug
+│     ├─ error.pug
+│     ├─ index.pug
+│     ├─ layout.pug
+│     ├─ layouts
+│     │  └─ index.pug
+│     ├─ partials
+│     │  └─ index.pug
+│     ├─ support
+│     │  └─ index.pug
+│     └─ _docs.txt
+├─ app.js
+├─ bin
+│  └─ www
+├─ package-lock.json
+├─ package.json
+├─ pnpm-lock.yaml
+├─ public
+│  ├─ images
+│  │  └─ _docs.txt
+│  ├─ javascripts
+│  │  └─ _docs.txt
+│  └─ stylesheets
+│     └─ style.css
+├─ README.md
+├─ sample
+├─ src
+│  └─ _docs.txt
+└─ vercel.json
+
+```
+
+</details>

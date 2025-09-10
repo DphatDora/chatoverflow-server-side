@@ -1,18 +1,23 @@
-const questionRepository = require("../../repository/question.repository");
+const questionRepository = require('../../repository/question.repository');
 
 async function getQuestionsByType(type) {
   switch (type) {
-    case "newest":
+    case 'newest':
       return questionRepository.getNewest();
-    case "trending":
+    case 'trending':
       return questionRepository.getTrending();
-    case "unanswer":
+    case 'unanswer':
       return questionRepository.getUnanswered();
     default:
       return null;
   }
 }
 
+async function getQuestionDetail(id) {
+  return questionRepository.getQuestionDetailById(id);
+}
+
 module.exports = {
   getQuestionsByType,
+  getQuestionDetail,
 };

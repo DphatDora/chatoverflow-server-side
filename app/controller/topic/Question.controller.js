@@ -1,5 +1,5 @@
-const questionService = require("../../services/topic/question.service");
-const ApiResponse = require("../../dto/res/api.response");
+const questionService = require('../../services/topic/question.service');
+const ApiResponse = require('../../dto/res/api.response');
 
 async function getQuestions(req, res) {
   try {
@@ -15,7 +15,7 @@ async function getQuestions(req, res) {
       return res
         .status(400)
         .json(
-          ApiResponse.error("Invalid type. Use newest | trending | unanswer")
+          ApiResponse.error('Invalid type. Use newest | trending | unanswer')
         );
     }
 
@@ -25,10 +25,41 @@ async function getQuestions(req, res) {
   } catch (err) {
     return res
       .status(500)
-      .json(ApiResponse.error("Internal server error", err.message));
+      .json(ApiResponse.error('Internal server error', err.message));
+  }
+}
+
+async function getQuestionDetail(req, res) {
+  try {
+    const { id } = req.params;
+    const question = await questionService.getQuestionDetail(id);
+
+    if (!question) {
+      return res
+        .status(400)
+        .json(
+          ApiResponse.error(
+            'Question not found, failure rasied at Question.controller'
+          )
+        );
+    }
+
+    return res.json(
+      ApiResponse.success('Get question detail successfully', question)
+    );
+  } catch (err) {
+    return res
+      .status(500)
+      .json(
+        ApiResponse.error(
+          'Internal server error, failure rasied at Question.controller',
+          err.message
+        )
+      );
   }
 }
 
 module.exports = {
   getQuestions,
+  getQuestionDetail,
 };
