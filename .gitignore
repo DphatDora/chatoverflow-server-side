@@ -149,3 +149,5 @@ Session.vim
 .netrwhist
 # auto-generated tag files
 tags
+public/upload
+package-lock.json
