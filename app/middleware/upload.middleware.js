@@ -2,7 +2,7 @@ const path = require('path');
 const multer = require('multer');
 const fs = require('fs');
 
-const uploadDir = `upload/${process.env.UPLOAD_BLOG_PATH}`;
+const uploadDir = `public/${process.env.UPLOAD_BLOG_PATH}`;
 
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
