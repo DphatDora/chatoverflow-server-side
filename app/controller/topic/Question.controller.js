@@ -1,5 +1,6 @@
-const questionService = require('../../services/topic/question.service');
+const questionService = require('../../services/topic/Question.service');
 const ApiResponse = require('../../dto/res/api.response');
+const Question = require('../../models/Question.model');
 
 async function getQuestions(req, res) {
   try {
@@ -59,7 +60,63 @@ async function getQuestionDetail(req, res) {
   }
 }
 
+async function createQuestion(req, res) {
+  try {
+    const { title, content, tags } = req.body;
+
+    if (!title || !content) {
+      return res
+        .status(400)
+        .json(ApiResponse.error('Required fields are missing'));
+    }
+
+    const userId = req.userId;
+
+    const question = await Question.create({
+      title,
+      content,
+      tags,
+      user: userId,
+    });
+
+    return res
+      .status(201)
+      .json(ApiResponse.success('Create question successfully', question));
+  } catch (err) {
+    console.error('Error in createQuestion:', err);
+    return res
+      .status(500)
+      .json(
+        ApiResponse.error(
+          'Internal server error, failure raised at Question.controller',
+          err.message
+        )
+      );
+  }
+}
+
+async function editQuestion(req, res) {
+  const { questionId } = req.params;
+  const { title, content, tags } = req.body;
+
+  try {
+    const updatedQuestion = await questionService.updateQuestion(questionId, {
+      title,
+      content,
+      tags,
+    });
+    return res.json(ApiResponse.success('Question updated', updatedQuestion));
+  } catch (error) {
+    console.error('Error editing question:', error);
+    return res
+      .status(400)
+      .json(ApiResponse.error(error.message || 'Failed to update question'));
+  }
+}
+
 module.exports = {
   getQuestions,
   getQuestionDetail,
+  createQuestion,
+  editQuestion,
 };
