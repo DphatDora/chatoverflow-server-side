@@ -1,4 +1,4 @@
-const questionService = require('../../services/topic/Question.service');
+const questionService = require('../../services/topic/question.service');
 const ApiResponse = require('../../dto/res/api.response');
 const Question = require('../../models/Question.model');
 
