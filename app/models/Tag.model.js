@@ -20,6 +20,7 @@ const TagSchema = new mongoose.Schema(
       default: 0,
       index: -1, // Descending index for popularity sorting
     },
+    description: { type: String, default: 'this is example description' },
   },
   {
     timestamps: true,
