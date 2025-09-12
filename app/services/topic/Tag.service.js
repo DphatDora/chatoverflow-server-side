@@ -43,8 +43,9 @@ class TagService {
    * @param {number} limit - Max results (default: 10)
    * @returns {Promise<Object>} { success, data: tags[] }
    */
-  static async searchTagsByName(searchTerm, limit = 10) {
+  static async searchTagsByName(searchTerm, page = 1, limit = 10) {
     try {
+      const skip = (page - 1) * limit;
       if (!searchTerm || searchTerm.trim().length < 1) {
         return {
           success: true,
@@ -55,11 +56,23 @@ class TagService {
 
       const searchRegex = new RegExp(searchTerm.trim(), 'i');
 
-      const tags = await nameTag(searchTerm, searchRegex, limit);
+      const { items, totalCount } = await nameTag(
+        searchTerm,
+        searchRegex,
+        skip,
+        limit
+      );
+      console.log(items);
+
       return {
         success: true,
         message: 'Successfully retrieved tags',
-        data: tags,
+        data: items,
+        pagination: {
+          currentPage: page,
+          totalCount,
+          limit,
+        },
       };
     } catch (error) {
       console.error('Search tags error:', error);

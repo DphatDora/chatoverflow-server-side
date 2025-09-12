@@ -9,37 +9,34 @@ class TagController {
    */
   static async getTags(req, res) {
     try {
-      const { page, name, limit: queryLimit } = req.query;
+      // Parse query params
+      const page = parseInt(req.query.page, 10) || 1;
+      const limit = req.query.limit ? parseInt(req.query.limit, 10) : 10;
+      const name = req.query.name?.trim();
 
-      // If name parameter exists, handle search
+      let result;
+
+      // If `name` exists → search
       if (name) {
-        const result = await TagService.searchTagsByName(
-          name,
-          queryLimit ? parseInt(queryLimit) : 10
-        );
-
-        if (!result.success) {
-          return res.status(500).json(ApiResponse.error(result.message));
-        }
-
-        const tags = TagResponseDto.fromTagList(result.data);
-
-        return res.status(200).json(ApiResponse.success(result.message, tags));
+        result = await TagService.searchTagsByName(name, page, limit);
+      } else {
+        // Otherwise → popular tags
+        result = await TagService.getPopularTags(page, limit);
       }
 
-      // Otherwise handle pagination
-      const pageNum = parseInt(page) || 1;
-      const limit = queryLimit ? parseInt(queryLimit) : 10;
-      const result = await TagService.getPopularTags(pageNum, limit);
-
+      // Handle error from service
       if (!result.success) {
         return res.status(500).json(ApiResponse.error(result.message));
       }
 
+      // Map DTOs
       const tags = TagResponseDto.fromTagList(result.data);
-      const { currentPage, totalCount } = result.pagination;
-      const baseUrl = '/tag';
 
+      // Pagination info
+      const { currentPage, totalCount } = result.pagination;
+      const baseUrl = name ? `/tag?name=${encodeURIComponent(name)}` : '/tag';
+
+      // Build response
       return res
         .status(200)
         .json(
