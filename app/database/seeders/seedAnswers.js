@@ -1,62 +1,58 @@
-require("dotenv").config();
-const mongoose = require("mongoose");
-const Answer = require("../../models/Answer.model");
-const Question = require("../../models/Question.model");
-const User = require("../../models/User.model");
+require('dotenv').config();
+const mongoose = require('mongoose');
+const Answer = require('../../models/Answer.model');
+const Question = require('../../models/Question.model');
+const User = require('../../models/User.model');
 
-async function seedAnswers() {
+const seedAnswers = async () => {
   try {
     await mongoose.connect(process.env.MONGODB_URI);
+    console.log('MongoDB connected');
 
-    await Answer.deleteMany({});
-    console.log("🧹 Cleared old answers");
-
-    const user = await User.findOne();
-    if (!user) {
-      throw new Error("⚠️ No users found! Please run seederUser.js first");
-    }
-
+    const users = await User.find();
     const questions = await Question.find();
-    if (!questions.length) {
-      throw new Error(
-        "⚠️ No questions found! Please run seederQuestion.js first"
-      );
+
+    if (users.length === 0 || questions.length === 0) {
+      console.log('Seed users and questions first!');
+      return;
     }
 
-    const answers = [
-      {
-        content:
-          "Add a dependency array to useEffect. Example: useEffect(() => {...}, []).",
-        question: questions[0]._id,
-        user: user._id,
-        upvote: 12,
-        downvote: 0,
-      },
-      {
-        content:
-          "In MongoDB, embed if tightly coupled, reference if reused across many documents.",
-        question: questions[1]._id,
-        user: user._id,
-        upvote: 20,
-        downvote: 1,
-      },
-      {
-        content:
-          "Use 'const' by default, 'let' when you need reassignment, and avoid 'var'.",
-        question: questions[2]._id,
-        user: user._id,
-        upvote: 5,
-        downvote: 0,
-      },
-    ];
+    // Xóa answer cũ
+    await Answer.deleteMany({});
+    console.log('Existing answers deleted');
 
-    await Answer.insertMany(answers);
-    console.log("✅ Seed answers success!");
-    process.exit(0);
+    const answersData = [];
+
+    for (let i = 1; i <= 60; i++) {
+      const randomUser = users[Math.floor(Math.random() * users.length)];
+      const randomQuestion =
+        questions[Math.floor(Math.random() * questions.length)];
+
+      // random upvote/downvote
+      const upvotedBy = [];
+      const downvotedBy = [];
+      users.forEach((user) => {
+        const rand = Math.random();
+        if (rand < 0.1) upvotedBy.push(user._id); // 10% chance
+        else if (rand < 0.15) downvotedBy.push(user._id); // 5% chance
+      });
+
+      answersData.push({
+        content: `This is the content of answer ${i}`,
+        question: randomQuestion._id,
+        user: randomUser._id,
+        upvotedBy,
+        downvotedBy,
+      });
+    }
+
+    await Answer.insertMany(answersData);
+    console.log('60 answers inserted');
+
+    mongoose.disconnect();
   } catch (err) {
-    console.error("❌ Seed answers failed:", err.message);
-    process.exit(1);
+    console.error(err);
   }
-}
+};
 
 seedAnswers();
