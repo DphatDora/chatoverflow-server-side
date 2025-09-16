@@ -2,11 +2,18 @@ require('dotenv').config();
 const mongoose = require('mongoose');
 const Question = require('../../models/Question.model');
 const User = require('../../models/User.model');
-const { syncTagCounts } = require('../../utils/tagSync');
 
-async function seedQuestions() {
+const seedQuestions = async () => {
   try {
     await mongoose.connect(process.env.MONGODB_URI);
+    console.log('MongoDB connected');
+
+
+    // Lấy tất cả user để assign vào question
+    const users = await User.find();
+    if (users.length === 0) {
+      console.log('No users found. Seed users first!');
+      return;
 
     // Clear old data
     await Question.deleteMany({});
@@ -14,7 +21,6 @@ async function seedQuestions() {
     const Tag = require('../../models/Tag.model');
     await Tag.updateMany({}, { questionCount: 0 });
     console.log('🧹 Cleared old questions and reset tag counts');
-
     const users = await User.find();
     if (users.length < 2) {
       throw new Error(
@@ -22,51 +28,32 @@ async function seedQuestions() {
       );
     }
 
-    const [user1, user2, user3] = users;
+    // Xóa questions cũ
+    await Question.deleteMany({});
+    console.log('Existing questions deleted');
 
-    const questions = [
-      {
-        title: 'How to fix React useEffect infinite loop?',
-        content: 'My useEffect keeps running infinitely. How can I fix this?',
-        tags: ['react', 'javascript'],
-        views: 120,
-        user: user1._id,
-        upvotedBy: [user2._id, user3._id],
-        downvotedBy: [],
-      },
-      {
-        title: 'Best practices for MongoDB schema design?',
-        content: 'Should I embed or reference documents in MongoDB schemas?',
-        tags: ['mongodb', 'database'],
-        views: 800,
-        user: user2._id,
-        upvotedBy: [user1._id],
-        downvotedBy: [user3._id],
-      },
-      {
-        title: 'Difference between let, var, and const in JavaScript?',
-        content: 'When should I use let, var, and const?',
-        tags: ['javascript', 'es6'],
-        views: 50,
-        user: user3._id,
-        upvotedBy: [],
-        downvotedBy: [user1._id],
-      },
-    ];
 
-    // Option 1: Slow but reliable - each question triggers save middleware
-    // await Question.createManyWithTags(questions);
+    const questionsData = [];
 
-    // Option 2: Fast bulk insert with batch tag update
-    await Question.insertManyWithTags(questions);
+    for (let i = 1; i <= 60; i++) {
+      const randomUser = users[Math.floor(Math.random() * users.length)];
 
-    console.log('✅ Seed questions success!');
+      questionsData.push({
+        title: `Sample Question ${i}`,
+        content: `This is the content of question ${i}. Lorem ipsum dolor sit amet.`,
+        tags: [`tag${i % 5}`, `tag${(i + 1) % 5}`],
+        askedTime: new Date(Date.now() - i * 1000 * 60 * 60),
+        views: Math.floor(Math.random() * 100),
+        user: randomUser._id,
 
-    process.exit(0);
+    await Question.insertMany(questionsData);
+    console.log('30 questions inserted');
+
+    mongoose.disconnect();
   } catch (err) {
     console.error('❌ Seed questions failed:', err.message);
     process.exit(1);
   }
-}
+};
 
 seedQuestions();

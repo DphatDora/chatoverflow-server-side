@@ -1,9 +1,10 @@
-const express = require("express");
+const express = require('express');
 const router = express.Router();
-const auth = require("../../middleware/App.middleware");
+const auth = require('../../middleware/App.middleware');
 
-router.use("/get-my-info", auth, require("./info"));
-router.use("/edit", auth, require("./info"));
+router.use('/get-my-info', auth, require('./info'));
+router.use('/edit', auth, require('./info'));
+router.use('/', require('./get'));
 // router.use("/banned", auth, require("./banned"));
 // router.use("/blocked", auth, require("./blocked"));
 // router.use("/friend", auth, require("./friend"));
