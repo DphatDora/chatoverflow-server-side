@@ -57,3 +57,7 @@ exports.updateBlog = async (slug, blogReq) => {
   }
   return updatedBlog;
 };
+
+exports.getUserBlogs = async (userId) => {
+  return await blogRepository.getUserBlogs(userId);
+};

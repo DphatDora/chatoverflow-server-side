@@ -26,3 +26,7 @@ exports.updateBlogBySlug = async (slug, updateData) => {
     runValidators: true,
   }).populate('user', 'avatar nickName');
 };
+
+exports.getUserBlogs = async (userId) => {
+  return await Blog.find({ user: userId }).populate('user', 'avatar nickName');
+};
