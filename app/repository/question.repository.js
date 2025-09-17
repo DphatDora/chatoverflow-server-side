@@ -74,9 +74,18 @@ async function getQuestionDetailById(id) {
   }
 }
 
+async function getQuestionsByUserId(userId) {
+  const userQuestions = await Question.find({ user: userId })
+    .sort({ createdAt: -1 })
+    .populate('user', 'name avatar')
+    .populate('answerCount');
+  return userQuestions;
+}
+
 module.exports = {
   getNewest,
   getTrending,
   getUnanswered,
   getQuestionDetailById,
+  getQuestionsByUserId,
 };

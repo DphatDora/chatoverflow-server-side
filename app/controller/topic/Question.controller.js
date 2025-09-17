@@ -114,9 +114,40 @@ async function editQuestion(req, res) {
   }
 }
 
+async function getUserQuestions(req, res) {
+  try {
+    const { userId } = req.params;
+    const userQuestions = await questionService.getUserQuestions(userId);
+
+    if (!userQuestions) {
+      return res
+        .status(400)
+        .json(
+          ApiResponse.error(
+            'User questions not found, failure raised at Question.controller'
+          )
+        );
+    }
+
+    return res.json(
+      ApiResponse.success('Get user questions successfully', userQuestions)
+    );
+  } catch (err) {
+    return res
+      .status(500)
+      .json(
+        ApiResponse.error(
+          'Internal server error, failure raised at Question.controller',
+          err.message
+        )
+      );
+  }
+}
+
 module.exports = {
   getQuestions,
   getQuestionDetail,
   createQuestion,
   editQuestion,
+  getUserQuestions,
 };
