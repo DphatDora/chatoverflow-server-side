@@ -1,5 +1,5 @@
 const userRepository = require('../../repository/user.repository');
-const { USER_FILTERS } = require('../../constants/filters/user');
+const USER_FILTERS = require('../../constants/filters/user');
 
 async function getUsers(page = 1, limit = 12, filter, search = '') {
   let sortStage = {};

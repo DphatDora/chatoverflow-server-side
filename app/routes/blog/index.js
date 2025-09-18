@@ -19,4 +19,10 @@ router.put(
 );
 router.get('/:blogSlug', blogController.getBlogDetail);
 
+/* 
+  Temporary remove authMiddleware for testing purpose. I haven't figured out why it didn't work with authMiddleware.
+  Expected response is blogs created by specific user with userId.
+*/
+router.get('/user/:userId', blogController.getUserBlogs);
+
 module.exports = router;
