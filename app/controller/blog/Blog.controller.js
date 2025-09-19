@@ -119,3 +119,17 @@ exports.updateBlog = async (req, res) => {
       .json(ApiResponse.error(error.message || 'Failed to update blog'));
   }
 };
+
+exports.getUserBlogs = async (req, res) => {
+  try {
+    const blogs = await blogService.getUserBlogs(req.params.userId);
+    res
+      .status(StatusCodes.OK)
+      .json(ApiResponse.success('User blogs retrieved successfully', blogs));
+  } catch (error) {
+    console.error('Get user blogs error:', error);
+    res
+      .status(StatusCodes.INTERNAL_SERVER_ERROR)
+      .json(ApiResponse.error(error.message || 'Failed to fetch user blogs'));
+  }
+};

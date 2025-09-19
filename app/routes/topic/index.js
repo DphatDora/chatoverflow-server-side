@@ -13,4 +13,15 @@ router.put(
   questionController.editQuestion
 );
 
+/* 
+  Temporary remove authMiddleware for testing purpose.
+  Expected response is questions created by specific user with userId.
+*/
+router.get('/user/:userId', questionController.getUserQuestions);
+// router.get(
+//   '/user/:userId',
+//   authMiddleware,
+//   questionController.getUserQuestions
+// );
+
 module.exports = router;

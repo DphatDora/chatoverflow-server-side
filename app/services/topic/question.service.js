@@ -47,9 +47,14 @@ async function updateQuestion(questionId, data) {
   return question;
 }
 
+async function getUserQuestions(userId) {
+  return questionRepository.getQuestionsByUserId(userId);
+}
+
 module.exports = {
   getQuestionsByType,
   getQuestionDetail,
   createQuestion,
   updateQuestion,
+  getUserQuestions,
 };
