@@ -1,5 +1,5 @@
-const mongoose = require("mongoose");
-const bcrypt = require("bcrypt");
+const mongoose = require('mongoose');
+const bcrypt = require('bcrypt');
 
 const AddressSchema = new mongoose.Schema(
   {
@@ -17,17 +17,18 @@ const UserSchema = new mongoose.Schema(
     email: { type: String, required: true, unique: true },
     password: { type: String, required: false },
     avatar: String,
+    bio: { type: String, maxlength: 300 },
     dateOfBirth: { type: Date },
     address: AddressSchema,
     gender: {
       type: String,
-      enum: ["male", "female", "other"],
-      default: "other",
+      enum: ['male', 'female', 'other'],
+      default: 'other',
     },
     status: {
       type: String,
-      enum: ["active", "inactive", "banned", "pending"], // thêm pending cho tài khoản chưa verify
-      default: "pending", // mặc định là pending khi đăng ký
+      enum: ['active', 'inactive', 'banned', 'pending'], // thêm pending cho tài khoản chưa verify
+      default: 'pending', // mặc định là pending khi đăng ký
     },
     tempPasswordHash: String, // Temporary storage for signup process
   },
@@ -38,4 +39,4 @@ UserSchema.methods.comparePassword = function (plain) {
   return bcrypt.compare(plain, this.password);
 };
 
-module.exports = mongoose.model("User", UserSchema);
+module.exports = mongoose.model('User', UserSchema);
