@@ -144,10 +144,50 @@ async function getUserQuestions(req, res) {
   }
 }
 
+async function upvoteQuestion(req, res) {
+  try {
+    const { questionId } = req.params;
+    const userId = req.userId;
+
+    const result = await questionService.upvoteQuestion(questionId, userId);
+
+    return res.json(ApiResponse.success('Upvote successful', result));
+  } catch (err) {
+    console.error(err);
+    return res.status(400).json(ApiResponse.error(err.message));
+  }
+}
+async function downvoteQuestion(req, res) {
+  try {
+    const { questionId } = req.params;
+    const userId = req.userId;
+
+    const result = await questionService.downvoteQuestion(questionId, userId);
+
+    return res.json(ApiResponse.success('Downvote successful', result));
+  } catch (err) {
+    console.error(err);
+    return res.status(400).json(ApiResponse.error(err.message));
+  }
+}
+async function voteStatus(req, res) {
+  try {
+    const { questionId } = req.params;
+    const userId = req.userId;
+    const result = await questionService.voteStatus(questionId, userId);
+    return res.json(ApiResponse.success('Vote status fetched', result));
+  } catch (err) {
+    console.error(err);
+    return res.status(400).json(ApiResponse.error(err.message));
+  }
+}
 module.exports = {
   getQuestions,
   getQuestionDetail,
   createQuestion,
   editQuestion,
   getUserQuestions,
+  upvoteQuestion,
+  downvoteQuestion,
+  voteStatus,
 };
