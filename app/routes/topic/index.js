@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const questionController = require('../../controller/topic/Question.controller');
 const authMiddleware = require('../../middleware/App.middleware');
+const answerController = require('../../controller/topic/Answer.controller');
 
 // GET /question/:type
 router.get('/:type', questionController.getQuestions);
@@ -23,5 +24,34 @@ router.get('/user/:userId', questionController.getUserQuestions);
 //   authMiddleware,
 //   questionController.getUserQuestions
 // );
+
+// Get answers for a specific question
+router.get('/:questionId/answers', answerController.getAnswers);
+
+// Get total answers count for a specific question
+router.get('/:questionId/answers/total', answerController.getTotalAnswers);
+
+// Add an answer to a specific question
+router.post('/:questionId/answers', authMiddleware, answerController.addAnswer);
+// Upvote a question
+router.post(
+  '/:questionId/upvote',
+  authMiddleware,
+  questionController.upvoteQuestion
+);
+
+// Downvote a question
+router.post(
+  '/:questionId/downvote',
+  authMiddleware,
+  questionController.downvoteQuestion
+);
+
+// Get vote status for a question
+router.get(
+  '/:questionId/vote-status',
+  authMiddleware,
+  questionController.voteStatus
+);
 
 module.exports = router;
