@@ -83,26 +83,38 @@ class AnswerRepository {
 
   /** Lấy answer theo ID */
   async findById(answerId, session) {
-    return Answer.findById(answerId).session(session);
+    const query = Answer.findById(answerId);
+    if (session) {
+      query.session(session);
+    }
+    return query;
   }
-
   /** Cập nhật content của answer */
   async updateContent(answerId, content, session) {
-    return Answer.findByIdAndUpdate(
-      answerId,
-      { content },
-      { new: true, session }
-    ).populate('user', 'name avatar');
+    const options = { new: true };
+    if (session) {
+      options.session = session;
+    }
+    return Answer.findByIdAndUpdate(answerId, { content }, options).populate(
+      'user',
+      'name avatar'
+    );
   }
-
   /** Xóa answer theo ID */
   async deleteAnswer(answerId, session) {
-    return Answer.deleteOne({ _id: answerId }).session(session);
+    const query = Answer.deleteOne({ _id: answerId });
+    if (session) {
+      query.session(session);
+    }
+    return query;
   }
-
   /** Xóa tất cả reply liên quan đến answer */
   async deleteRepliesByAnswer(answerId, session) {
-    return Reply.deleteMany({ answer: answerId }).session(session);
+    const query = Reply.deleteMany({ answer: answerId });
+    if (session) {
+      query.session(session);
+    }
+    return query;
   }
 
   /** Kiểm tra xem user có phải owner của answer không */
