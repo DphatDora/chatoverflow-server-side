@@ -72,8 +72,6 @@ async function upvoteQuestion(questionId, userId) {
     downvotes: question.downvotedBy.length,
     userUpvoted: question.upvotedBy.includes(userId),
     userDownvoted: question.downvotedBy.includes(userId),
-    userUpvotedLength: question.upvotedBy.length,
-    userDownvotedLength: question.downvotedBy.length,
   };
 }
 async function downvoteQuestion(questionId, userId) {
@@ -97,17 +95,19 @@ async function downvoteQuestion(questionId, userId) {
     downvotes: question.downvotedBy.length,
     userUpvoted: question.upvotedBy.includes(userId),
     userDownvoted: question.downvotedBy.includes(userId),
-    userUpvotedLength: question.upvotedBy.length,
-    userDownvotedLength: question.downvotedBy.length,
   };
 }
 
 async function voteStatus(questionId, userId) {
-  const question = await Question.findById(questionId);
-  return {
-    upvoted: question.upvotedBy.includes(userId),
-    downvoted: question.downvotedBy.includes(userId),
-  };
+  try {
+    const question = await Question.findById(questionId);
+    return {
+      upvoted: question.upvotedBy.includes(userId),
+      downvoted: question.downvotedBy.includes(userId),
+    };
+  } catch (error) {
+    throw new Error('Error fetching vote status');
+  }
 }
 
 module.exports = {

@@ -93,7 +93,7 @@ class AnswerService {
     const answer = await Answer.findById(answerId);
     if (!answer) throw new Error('Answer not found');
 
-    if (answer.user._id.toString() !== userId) {
+    if (answer.user.toString() !== userId) {
       throw new Error('You are not authorized to edit this answer');
     }
 
@@ -125,7 +125,6 @@ class AnswerService {
   async isAnswerOwner(answerId, userId) {
     const answer = await Answer.findById(answerId);
     if (!answer) throw new Error('Answer not found');
-
     return answer.user.toString() === userId;
   }
 }
