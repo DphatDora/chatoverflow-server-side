@@ -11,6 +11,7 @@ router.use('/user', require('./user'));
 router.use('/question', require('./topic'));
 router.use('/blog', require('./blog'));
 router.use('/tags', require('./tag'));
+router.use('/search', require('./search'));
 router.use('/answer', require('./answer'));
 router.use('/reply', require('./reply'));
 
