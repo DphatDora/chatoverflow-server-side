@@ -51,10 +51,72 @@ async function getUserQuestions(userId) {
   return questionRepository.getQuestionsByUserId(userId);
 }
 
+async function upvoteQuestion(questionId, userId) {
+  const question = await Question.findById(questionId);
+  if (!question) throw new Error('Question not found');
+
+  const hasUpvoted = question.upvotedBy.includes(userId);
+  const hasDownvoted = question.downvotedBy.includes(userId);
+
+  if (hasUpvoted) {
+    question.upvotedBy.pull(userId);
+  } else {
+    question.upvotedBy.push(userId);
+    if (hasDownvoted) question.downvotedBy.pull(userId);
+  }
+
+  await question.save();
+
+  return {
+    upvotes: question.upvotedBy.length,
+    downvotes: question.downvotedBy.length,
+    userUpvoted: question.upvotedBy.includes(userId),
+    userDownvoted: question.downvotedBy.includes(userId),
+  };
+}
+async function downvoteQuestion(questionId, userId) {
+  const question = await Question.findById(questionId);
+  if (!question) throw new Error('Question not found');
+
+  const hasDownvoted = question.downvotedBy.includes(userId);
+  const hasUpvoted = question.upvotedBy.includes(userId);
+
+  if (hasDownvoted) {
+    question.downvotedBy.pull(userId);
+  } else {
+    question.downvotedBy.push(userId);
+    if (hasUpvoted) question.upvotedBy.pull(userId);
+  }
+
+  await question.save();
+
+  return {
+    upvotes: question.upvotedBy.length,
+    downvotes: question.downvotedBy.length,
+    userUpvoted: question.upvotedBy.includes(userId),
+    userDownvoted: question.downvotedBy.includes(userId),
+  };
+}
+
+async function voteStatus(questionId, userId) {
+  try {
+    const question = await Question.findById(questionId);
+    return {
+      upvoted: question.upvotedBy.includes(userId),
+      downvoted: question.downvotedBy.includes(userId),
+    };
+  } catch (error) {
+    throw new Error('Error fetching vote status');
+  }
+}
+
 module.exports = {
   getQuestionsByType,
   getQuestionDetail,
   createQuestion,
   updateQuestion,
   getUserQuestions,
+  upvoteQuestion,
+  downvoteQuestion,
+  voteStatus,
 };
