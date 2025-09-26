@@ -11,18 +11,33 @@ router.post(
   upload.single('coverImage'),
   blogController.createBlog
 );
+
+router.post(
+  '/comments/:commentId/vote',
+  authMiddleware,
+  blogController.voteComment
+);
+
+router.get('/user/:userId', blogController.getUserBlogs);
+
 router.put(
   '/:blogSlug/edit',
   authMiddleware,
   upload.single('coverImage'),
   blogController.updateBlog
 );
+router.post('/:blogSlug/vote', authMiddleware, blogController.voteBlog);
+router.post(
+  '/:blogSlug/comments',
+  authMiddleware,
+  blogController.createComment
+);
+router.get(
+  '/:blogSlug/check-vote',
+  authMiddleware,
+  blogController.checkBlogVote
+);
+router.get('/:blogSlug/comments', blogController.getComments);
 router.get('/:blogSlug', blogController.getBlogDetail);
-
-/* 
-  Temporary remove authMiddleware for testing purpose. I haven't figured out why it didn't work with authMiddleware.
-  Expected response is blogs created by specific user with userId.
-*/
-router.get('/user/:userId', blogController.getUserBlogs);
 
 module.exports = router;
