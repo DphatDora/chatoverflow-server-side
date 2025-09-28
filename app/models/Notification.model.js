@@ -21,6 +21,8 @@ const NotificationSchema = new mongoose.Schema(
         'blog_downvote',
         'comment_upvote',
         'comment_downvote',
+        'new_blog_comment',
+        'blog_comment_upvote',
       ],
     },
     payload: {
