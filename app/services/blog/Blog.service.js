@@ -75,21 +75,24 @@ exports.voteBlog = async (blogSlug, userId, voteType) => {
     const blogOwnerIdString = updatedBlog.user._id.toString();
     const voterUserIdString = userId.toString();
 
-    // Only send notification if not self-vote and user actually upvoted (not removed upvote)
     if (
       blogOwnerIdString !== voterUserIdString &&
       updatedBlog.upvotedBy.includes(userId)
     ) {
-      NotificationService.createNotification(blogOwnerIdString, 'blog_upvote', {
-        blogId: updatedBlog._id.toString(),
-        blogTitle: updatedBlog.title,
-        blogSlug: updatedBlog.slug,
-        totalUpvotes: updatedBlog.upvotedBy.length,
-        voterUserId: voterUserIdString,
-        blogUrl: `${
-          process.env.FRONTEND_BASE_URL || 'http://localhost:5173'
-        }/blog/${updatedBlog.slug}`,
-      });
+      await NotificationService.createNotification(
+        blogOwnerIdString,
+        'blog_upvote',
+        {
+          blogId: updatedBlog._id.toString(),
+          blogTitle: updatedBlog.title,
+          blogSlug: updatedBlog.slug,
+          totalUpvotes: updatedBlog.upvotedBy.length,
+          voterUserId: voterUserIdString,
+          blogUrl: `${
+            process.env.FRONTEND_BASE_URL || 'http://localhost:5173'
+          }/blog/${updatedBlog.slug}`,
+        }
+      );
     }
   }
 
@@ -114,12 +117,12 @@ exports.createComment = async (blogSlug, userId, content) => {
 
   const comment = await blogRepository.createComment(commentData);
 
-  // Send notification to blog owner about new comment
+  // Send notification to blog owner
   const blogOwnerIdString = blog.user._id.toString();
   const commenterIdString = userId.toString();
 
   if (blogOwnerIdString !== commenterIdString) {
-    NotificationService.createNotification(
+    await NotificationService.createNotification(
       blogOwnerIdString,
       'new_blog_comment',
       {
@@ -167,12 +170,11 @@ exports.voteComment = async (commentId, userId, voteType) => {
     const commentOwnerIdString = updatedComment.user._id.toString();
     const voterUserIdString = userId.toString();
 
-    // Only send notification if not self-vote and user actually upvoted (not removed upvote)
     if (
       commentOwnerIdString !== voterUserIdString &&
       updatedComment.upvotedBy.includes(userId)
     ) {
-      NotificationService.createNotification(
+      await NotificationService.createNotification(
         commentOwnerIdString,
         'blog_comment_upvote',
         {

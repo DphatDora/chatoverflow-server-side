@@ -31,13 +31,11 @@ class AnswerService {
       content,
     });
 
-    // Get question details for notification
+    // Send notification to question owner
     const question = await Question.findById(questionId).populate(
       'user',
       'name nickName email'
     );
-
-    // FIX: Convert ObjectId to string
     const questionOwnerIdString = question?.user?._id?.toString();
     const answerUserIdString = userId.toString();
 
@@ -46,16 +44,15 @@ class AnswerService {
       question.user &&
       questionOwnerIdString !== answerUserIdString
     ) {
-      // Send notification to question owner about new answer
       await NotificationService.createNotification(
-        questionOwnerIdString, // Convert to string
+        questionOwnerIdString,
         'new_answer',
         {
-          questionId: question._id.toString(), // Convert to string
+          questionId: question._id.toString(),
           questionTitle: question.title,
           answerContent:
             content.length > 200 ? content.substring(0, 200) + '...' : content,
-          answererId: answerUserIdString, // Convert to string
+          answererId: answerUserIdString,
           questionUrl: `${
             process.env.FRONTEND_BASE_URL || 'http://localhost:5173'
           }/question/${question._id}`,
@@ -82,22 +79,21 @@ class AnswerService {
       answer.upvotedBy.push(userId);
       if (hasDownvoted) answer.downvotedBy.pull(userId);
 
-      // FIX: Convert ObjectId to string
+      // Send notification for upvote
       const answerOwnerIdString = answer.user?._id?.toString();
       const voterUserIdString = userId.toString();
 
-      // Send notification to answer owner about upvote (if not self-vote)
       if (answer.user && answerOwnerIdString !== voterUserIdString) {
         const question = await Question.findById(answer.question);
         await NotificationService.createNotification(
-          answerOwnerIdString, // Convert to string
+          answerOwnerIdString,
           'answer_upvote',
           {
-            answerId: answer._id.toString(), // Convert to string
-            questionId: answer.question.toString(), // Convert to string
+            answerId: answer._id.toString(),
+            questionId: answer.question.toString(),
             questionTitle: question?.title || 'Unknown Question',
             totalUpvotes: answer.upvotedBy.length + 1,
-            voterUserId: voterUserIdString, // Convert to string
+            voterUserId: voterUserIdString,
             answerUrl: `${
               process.env.FRONTEND_BASE_URL || 'http://localhost:5173'
             }/question/${answer.question}#answer-${answer._id}`,
@@ -132,22 +128,21 @@ class AnswerService {
       answer.downvotedBy.push(userId);
       if (hasUpvoted) answer.upvotedBy.pull(userId);
 
-      // FIX: Convert ObjectId to string
+      // Send notification for downvote
       const answerOwnerIdString = answer.user?._id?.toString();
       const voterUserIdString = userId.toString();
 
-      // Send notification to answer owner about downvote (if not self-vote)
       if (answer.user && answerOwnerIdString !== voterUserIdString) {
         const question = await Question.findById(answer.question);
         await NotificationService.createNotification(
-          answerOwnerIdString, // Convert to string
+          answerOwnerIdString,
           'answer_downvote',
           {
-            answerId: answer._id.toString(), // Convert to string
-            questionId: answer.question.toString(), // Convert to string
+            answerId: answer._id.toString(),
+            questionId: answer.question.toString(),
             questionTitle: question?.title || 'Unknown Question',
             totalDownvotes: answer.downvotedBy.length + 1,
-            voterUserId: voterUserIdString, // Convert to string
+            voterUserId: voterUserIdString,
             answerUrl: `${
               process.env.FRONTEND_BASE_URL || 'http://localhost:5173'
             }/question/${answer.question}#answer-${answer._id}`,

@@ -5,6 +5,9 @@ const {
   NewNotificationResponse,
 } = require('../../dto/res/notification.response');
 const mongoose = require('mongoose');
+const {
+  generateEmailContent,
+} = require('../../constants/template/email.templates');
 
 // Lazy import socket service to avoid circular dependency
 let socketService = null;
@@ -31,58 +34,7 @@ const createEmailTransporter = () => {
   });
 };
 
-// Generate email content based on action type
-function generateEmailContent(action, payload, user) {
-  const userName = user.name || user.nickName || 'bạn';
-
-  const templates = {
-    new_answer: {
-      subject: 'Có câu trả lời mới cho câu hỏi của bạn',
-      html: `
-        <h3>Xin chào ${userName}!</h3>
-        <p>Có người vừa trả lời câu hỏi "<strong>${payload.questionTitle}</strong>" của bạn.</p>
-        <blockquote style="background: #f8f9fa; padding: 15px; border-left: 4px solid #007bff; margin: 15px 0;">
-          ${payload.answerContent}
-        </blockquote>
-        <p>Bạn có thể xem chi tiết tại: <a href="${payload.questionUrl}">Xem câu trả lời</a></p>
-        <p><small>Đây là email tự động, vui lòng không trả lời.</small></p>
-      `,
-    },
-    question_upvote: {
-      subject: 'Câu hỏi của bạn nhận được upvote',
-      html: `
-        <h3>Xin chào ${userName}!</h3>
-        <p>Câu hỏi "<strong>${payload.questionTitle}</strong>" của bạn vừa nhận được một upvote! 👍</p>
-        <p>Tổng số upvotes hiện tại: <strong>${payload.totalUpvotes}</strong></p>
-        <p><a href="${payload.questionUrl}">Xem câu hỏi</a></p>
-        <p><small>Đây là email tự động, vui lòng không trả lời.</small></p>
-      `,
-    },
-    answer_upvote: {
-      subject: 'Câu trả lời của bạn nhận được upvote',
-      html: `
-        <h3>Xin chào ${userName}!</h3>
-        <p>Câu trả lời của bạn cho câu hỏi "<strong>${payload.questionTitle}</strong>" vừa nhận được một upvote! 👍</p>
-        <p>Tổng số upvotes hiện tại: <strong>${payload.totalUpvotes}</strong></p>
-        <p><a href="${payload.answerUrl}">Xem câu trả lời</a></p>
-        <p><small>Đây là email tự động, vui lòng không trả lời.</small></p>
-      `,
-    },
-  };
-
-  return (
-    templates[action] || {
-      subject: 'Thông báo từ ChatOverflow',
-      html: `
-      <h3>Xin chào ${userName}!</h3>
-      <p>Bạn có thông báo mới từ ChatOverflow.</p>
-      <p><small>Đây là email tự động, vui lòng không trả lời.</small></p>
-    `,
-    }
-  );
-}
-
-// Background email processing function
+// Background email processing
 async function processEmailNotification(
   notificationId,
   userId,
@@ -94,7 +46,6 @@ async function processEmailNotification(
       `📧 Processing email notification for user: ${userId}, action: ${action}`
     );
 
-    // Get user email
     const user = await User.findById(userId).select('email name nickName');
     if (!user || !user.email) {
       console.warn(
@@ -103,13 +54,9 @@ async function processEmailNotification(
       return;
     }
 
-    // Create email transporter
     const transporter = createEmailTransporter();
-
-    // Generate email content
     const emailContent = generateEmailContent(action, payload, user);
 
-    // Send email
     await transporter.sendMail({
       from: `"ChatOverflow" <${process.env.EMAIL_USER}>`,
       to: user.email,
@@ -117,7 +64,6 @@ async function processEmailNotification(
       html: emailContent.html,
     });
 
-    // Update notification record
     await Notification.findByIdAndUpdate(notificationId, {
       emailSent: true,
       emailSentAt: new Date(),
@@ -132,7 +78,6 @@ async function processEmailNotification(
       error.message
     );
 
-    // Update notification with error (don't throw)
     try {
       await Notification.findByIdAndUpdate(notificationId, {
         $set: {
@@ -162,7 +107,6 @@ class NotificationService {
   // Create and process notification
   static async createNotification(userId, action, payload = {}) {
     try {
-      // FIX: Ensure userId is a valid ObjectId string
       let userIdString;
       if (mongoose.Types.ObjectId.isValid(userId)) {
         userIdString = userId.toString();
@@ -174,7 +118,6 @@ class NotificationService {
         `📝 Creating notification for user: ${userIdString}, action: ${action}`
       );
 
-      // Create notification record
       const notification = new Notification({
         userId: userIdString,
         action,
@@ -194,7 +137,6 @@ class NotificationService {
           const notificationResponse = createNotificationResponse(notification);
           socket.sendNotificationToUser(userIdString, notificationResponse);
 
-          // Update socket sent status
           notification.sentViaSocket = true;
           await notification.save();
           console.log(
@@ -210,7 +152,6 @@ class NotificationService {
           `❌ Socket notification failed for user ${userIdString}:`,
           socketError.message
         );
-        // Continue processing email notification even if socket fails
       }
 
       // Process email notification in background (non-blocking)
@@ -245,8 +186,6 @@ class NotificationService {
 
   // Send real-time notification via socket (will be implemented)
   static async sendSocketNotification(userId, notification) {
-    // This will be implemented when we add socket.io
-    // For now, just mark as sent via socket
     try {
       await Notification.findByIdAndUpdate(notification._id, {
         sentViaSocket: true,

@@ -68,20 +68,19 @@ async function upvoteQuestion(questionId, userId) {
     question.upvotedBy.push(userId);
     if (hasDownvoted) question.downvotedBy.pull(userId);
 
-    //Convert ObjectId to string
+    //Send notification for upvote
     const questionOwnerIdString = question.user._id.toString();
     const voterUserIdString = userId.toString();
 
-    // Send notification to question owner about upvote (if not self-vote)
     if (question.user && questionOwnerIdString !== voterUserIdString) {
       await NotificationService.createNotification(
-        questionOwnerIdString, // Convert to string
+        questionOwnerIdString,
         'question_upvote',
         {
-          questionId: question._id.toString(), // Convert to string
+          questionId: question._id.toString(),
           questionTitle: question.title,
           totalUpvotes: question.upvotedBy.length + 1,
-          voterUserId: voterUserIdString, // Convert to string
+          voterUserId: voterUserIdString,
           questionUrl: `${
             process.env.FRONTEND_BASE_URL || 'http://localhost:5173'
           }/question/${question._id}`,
@@ -116,20 +115,19 @@ async function downvoteQuestion(questionId, userId) {
     question.downvotedBy.push(userId);
     if (hasUpvoted) question.upvotedBy.pull(userId);
 
-    // Convert ObjectId to string
+    // Send notification for downvote
     const questionOwnerIdString = question.user._id.toString();
     const voterUserIdString = userId.toString();
 
-    // Send notification to question owner about downvote (if not self-vote)
     if (question.user && questionOwnerIdString !== voterUserIdString) {
       await NotificationService.createNotification(
-        questionOwnerIdString, // Convert to string
+        questionOwnerIdString,
         'question_downvote',
         {
-          questionId: question._id.toString(), // Convert to string
+          questionId: question._id.toString(),
           questionTitle: question.title,
           totalDownvotes: question.downvotedBy.length + 1,
-          voterUserId: voterUserIdString, // Convert to string
+          voterUserId: voterUserIdString,
           questionUrl: `${
             process.env.FRONTEND_BASE_URL || 'http://localhost:5173'
           }/question/${question._id}`,
