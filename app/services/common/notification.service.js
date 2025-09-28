@@ -4,13 +4,6 @@ const nodemailer = require('nodemailer');
 const {
   NewNotificationResponse,
 } = require('../../dto/res/notification.response');
-const {
-  Worker,
-  isMainThread,
-  parentPort,
-  workerData,
-} = require('worker_threads');
-const path = require('path');
 const mongoose = require('mongoose');
 
 // Lazy import socket service to avoid circular dependency
@@ -27,202 +20,16 @@ const getSocketService = () => {
   return socketService;
 };
 
-// In-process background queue
-class NotificationQueue {
-  constructor() {
-    this.queue = [];
-    this.processing = false;
-    this.workers = [];
-    this.maxWorkers = 3;
-    this.workerPool = [];
-
-    // Initialize worker pool
-    this.initializeWorkerPool();
-
-    // Start processing queue
-    this.startProcessing();
-  }
-
-  initializeWorkerPool() {
-    for (let i = 0; i < this.maxWorkers; i++) {
-      const worker = {
-        id: i,
-        busy: false,
-        worker: null,
-      };
-      this.workerPool.push(worker);
-    }
-  }
-
-  // Add notification to queue
-  enqueue(notificationData) {
-    this.queue.push({
-      ...notificationData,
-      addedAt: new Date(),
-      retries: 0,
-    });
-
-    if (!this.processing) {
-      this.startProcessing();
-    }
-  }
-
-  // Get available worker
-  getAvailableWorker() {
-    return this.workerPool.find((w) => !w.busy);
-  }
-
-  // Process queue with worker pool
-  async startProcessing() {
-    if (this.processing) return;
-    this.processing = true;
-
-    while (this.queue.length > 0) {
-      const availableWorker = this.getAvailableWorker();
-
-      if (!availableWorker) {
-        // Wait for a worker to become available
-        await new Promise((resolve) => setTimeout(resolve, 100));
-        continue;
-      }
-
-      const task = this.queue.shift();
-      if (!task) continue;
-
-      this.processWithWorker(availableWorker, task);
-    }
-
-    this.processing = false;
-  }
-
-  async processWithWorker(workerSlot, task) {
-    workerSlot.busy = true;
-
-    try {
-      // Create worker for this task
-      const worker = new Worker(__filename, {
-        workerData: {
-          task: task,
-          isWorker: true,
-        },
-      });
-
-      workerSlot.worker = worker;
-
-      worker.on('message', (result) => {
-        if (result.success) {
-          console.log(`✅ Notification processed successfully: ${task.action}`);
-        } else {
-          console.error(`❌ Notification processing failed: ${result.error}`);
-
-          // Retry logic
-          if (task.retries < 3) {
-            task.retries++;
-            this.queue.push(task);
-          }
-        }
-
-        // Free up worker
-        workerSlot.busy = false;
-        workerSlot.worker = null;
-        worker.terminate();
-      });
-
-      worker.on('error', (error) => {
-        console.error(`Worker error: ${error.message}`);
-        workerSlot.busy = false;
-        workerSlot.worker = null;
-
-        // Retry on worker error
-        if (task.retries < 3) {
-          task.retries++;
-          this.queue.push(task);
-        }
-      });
-    } catch (error) {
-      console.error(`Failed to create worker: ${error.message}`);
-      workerSlot.busy = false;
-
-      // Retry
-      if (task.retries < 3) {
-        task.retries++;
-        this.queue.push(task);
-      }
-    }
-  }
-}
-
-// Create global queue instance
-const notificationQueue = new NotificationQueue();
-
-// Worker thread logic
-if (!isMainThread && workerData && workerData.isWorker) {
-  const processNotificationInWorker = async (task) => {
-    try {
-      // Get user email
-      const user = await User.findById(task.userId).select(
-        'email name nickName'
-      );
-      if (!user || !user.email) {
-        throw new Error('User not found or email not available');
-      }
-
-      // Create email transporter (reuse from OTP service pattern)
-      const transporter = nodemailer.createTransport({
-        service: 'gmail',
-        auth: {
-          user: process.env.EMAIL_USER,
-          pass: process.env.EMAIL_PASS,
-        },
-      });
-
-      // Generate email content based on action
-      const emailContent = generateEmailContent(
-        task.action,
-        task.payload,
-        user
-      );
-
-      // Send email
-      await transporter.sendMail({
-        from: `"ChatOverflow" <${process.env.EMAIL_USER}>`,
-        to: user.email,
-        subject: emailContent.subject,
-        html: emailContent.html,
-      });
-
-      // Update notification record
-      await Notification.findByIdAndUpdate(task.notificationId, {
-        emailSent: true,
-        emailSentAt: new Date(),
-      });
-
-      return { success: true };
-    } catch (error) {
-      // Update notification with error
-      await Notification.findByIdAndUpdate(task.notificationId, {
-        $set: {
-          emailError: error.message,
-          lastRetryAt: new Date(),
-        },
-        $inc: {
-          retryCount: 1,
-        },
-      });
-
-      return { success: false, error: error.message };
-    }
-  };
-
-  // Process the task
-  processNotificationInWorker(workerData.task)
-    .then((result) => {
-      parentPort.postMessage(result);
-    })
-    .catch((error) => {
-      parentPort.postMessage({ success: false, error: error.message });
-    });
-}
+// Create email transporter
+const createEmailTransporter = () => {
+  return nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+      user: process.env.EMAIL_USER,
+      pass: process.env.EMAIL_PASS,
+    },
+  });
+};
 
 // Generate email content based on action type
 function generateEmailContent(action, payload, user) {
@@ -275,9 +82,84 @@ function generateEmailContent(action, payload, user) {
   );
 }
 
+// Background email processing function
+async function processEmailNotification(
+  notificationId,
+  userId,
+  action,
+  payload
+) {
+  try {
+    console.log(
+      `📧 Processing email notification for user: ${userId}, action: ${action}`
+    );
+
+    // Get user email
+    const user = await User.findById(userId).select('email name nickName');
+    if (!user || !user.email) {
+      console.warn(
+        `⚠️ User not found or email not available for userId: ${userId}`
+      );
+      return;
+    }
+
+    // Create email transporter
+    const transporter = createEmailTransporter();
+
+    // Generate email content
+    const emailContent = generateEmailContent(action, payload, user);
+
+    // Send email
+    await transporter.sendMail({
+      from: `"ChatOverflow" <${process.env.EMAIL_USER}>`,
+      to: user.email,
+      subject: emailContent.subject,
+      html: emailContent.html,
+    });
+
+    // Update notification record
+    await Notification.findByIdAndUpdate(notificationId, {
+      emailSent: true,
+      emailSentAt: new Date(),
+    });
+
+    console.log(
+      `✅ Email sent successfully to ${user.email} for action: ${action}`
+    );
+  } catch (error) {
+    console.error(
+      `❌ Email processing failed for user ${userId}, action: ${action}:`,
+      error.message
+    );
+
+    // Update notification with error (don't throw)
+    try {
+      await Notification.findByIdAndUpdate(notificationId, {
+        $set: {
+          emailError: error.message,
+          lastRetryAt: new Date(),
+        },
+        $inc: {
+          retryCount: 1,
+        },
+      });
+    } catch (updateError) {
+      console.error(
+        `❌ Failed to update notification error status:`,
+        updateError.message
+      );
+    }
+  }
+}
+
+// Helper function to create notification response
+function createNotificationResponse(notification) {
+  return new NewNotificationResponse(notification);
+}
+
 // Main Notification Service
 class NotificationService {
-  // Create and queue notification
+  // Create and process notification
   static async createNotification(userId, action, payload = {}) {
     try {
       // FIX: Ensure userId is a valid ObjectId string
@@ -305,7 +187,7 @@ class NotificationService {
       await notification.save();
       console.log(`✅ Notification saved to database: ${notification._id}`);
 
-      // Try to send socket notification, but don't crash if it fails
+      // Try to send socket notification (non-blocking)
       try {
         const socket = getSocketService();
         if (socket && socket.isUserOnline(userIdString)) {
@@ -331,17 +213,15 @@ class NotificationService {
         // Continue processing email notification even if socket fails
       }
 
-      // Queue email processing (always send email regardless of online status)
-      const emailTask = {
-        notificationId: notification._id.toString(),
-        userId: userIdString,
-        action,
-        payload,
-        retryCount: 0,
-      };
-
-      notificationQueue.enqueue(emailTask);
-      console.log(`📧 Email task queued for user: ${userIdString}`);
+      // Process email notification in background (non-blocking)
+      setImmediate(() => {
+        processEmailNotification(
+          notification._id.toString(),
+          userIdString,
+          action,
+          payload
+        );
+      });
 
       return notification;
     } catch (error) {
