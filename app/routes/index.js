@@ -12,5 +12,6 @@ router.use('/question', require('./topic'));
 router.use('/blog', require('./blog'));
 router.use('/tags', require('./tag'));
 router.use('/search', require('./search'));
+router.use('/chat', require('./chat'));
 
 module.exports = router;

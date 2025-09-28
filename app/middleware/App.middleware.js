@@ -12,6 +12,8 @@ const auth = (req, res, next) => {
     '/auth/forgot-password/verify-otp',
     '/auth/forgot-password/reset-password',
     '/auth/logout',
+
+    '/chat/conversations',
   ];
 
   // Check if current path is in whitelist
