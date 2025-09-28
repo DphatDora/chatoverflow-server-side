@@ -1,8 +1,8 @@
-const User = require("../models/User.model");
-const RefreshToken = require("../models/RefreshToken.model");
+const User = require('../models/User.model');
+const RefreshToken = require('../models/RefreshToken.model');
 
 exports.findUserByEmail = async (email, withPassword = false) => {
-  if (withPassword) return User.findOne({ email }).select("+password");
+  if (withPassword) return User.findOne({ email }).select('+password');
   return User.findOne({ email });
 };
 
@@ -24,7 +24,7 @@ exports.findRefreshToken = async (token) => {
     token,
     isRevoked: false,
     expiresAt: { $gt: new Date() },
-  }).populate("userId");
+  }).populate('userId');
 };
 
 exports.revokeRefreshToken = async (token) => {

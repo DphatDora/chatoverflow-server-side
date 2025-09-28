@@ -21,6 +21,24 @@ QuestionSchema.virtual('answerCount', {
   count: true,
 });
 
+/* 
+Add text index for search functionality
+*/
+QuestionSchema.index(
+  {
+    title: 'text',
+    content: 'text',
+    tags: 'text',
+  },
+  {
+    weights: {
+      title: 10,
+      content: 5,
+      tags: 3,
+    },
+  }
+);
+
 // Helper function to update tags
 const updateTags = async (tags) => {
   const Tag = require('./Tag.model');
