@@ -1,7 +1,9 @@
 const answerRepository = require('../../repository/answer.repository');
 const Answer = require('../../models/Answer.model');
+const Question = require('../../models/Question.model');
 const mongoose = require('mongoose');
 const { DEFAULT_ANSWER_SORT } = require('../../constants/filters/answer');
+const NotificationService = require('../common/notification.service');
 
 class AnswerService {
   async getAnswersByQuestion(
@@ -28,11 +30,47 @@ class AnswerService {
       user: userId,
       content,
     });
+
+    // Get question details for notification
+    const question = await Question.findById(questionId).populate(
+      'user',
+      'name nickName email'
+    );
+
+    // FIX: Convert ObjectId to string
+    const questionOwnerIdString = question?.user?._id?.toString();
+    const answerUserIdString = userId.toString();
+
+    if (
+      question &&
+      question.user &&
+      questionOwnerIdString !== answerUserIdString
+    ) {
+      // Send notification to question owner about new answer
+      await NotificationService.createNotification(
+        questionOwnerIdString, // Convert to string
+        'new_answer',
+        {
+          questionId: question._id.toString(), // Convert to string
+          questionTitle: question.title,
+          answerContent:
+            content.length > 200 ? content.substring(0, 200) + '...' : content,
+          answererId: answerUserIdString, // Convert to string
+          questionUrl: `${
+            process.env.FRONTEND_BASE_URL || 'http://localhost:5173'
+          }/question/${question._id}`,
+        }
+      );
+    }
+
     return answer;
   }
 
   async upvoteAnswer(answerId, userId) {
-    const answer = await Answer.findById(answerId);
+    const answer = await Answer.findById(answerId).populate(
+      'user',
+      'name nickName email'
+    );
     if (!answer) throw new Error('Answer not found');
 
     const hasUpvoted = answer.upvotedBy.includes(userId);
@@ -43,6 +81,29 @@ class AnswerService {
     } else {
       answer.upvotedBy.push(userId);
       if (hasDownvoted) answer.downvotedBy.pull(userId);
+
+      // FIX: Convert ObjectId to string
+      const answerOwnerIdString = answer.user?._id?.toString();
+      const voterUserIdString = userId.toString();
+
+      // Send notification to answer owner about upvote (if not self-vote)
+      if (answer.user && answerOwnerIdString !== voterUserIdString) {
+        const question = await Question.findById(answer.question);
+        await NotificationService.createNotification(
+          answerOwnerIdString, // Convert to string
+          'answer_upvote',
+          {
+            answerId: answer._id.toString(), // Convert to string
+            questionId: answer.question.toString(), // Convert to string
+            questionTitle: question?.title || 'Unknown Question',
+            totalUpvotes: answer.upvotedBy.length + 1,
+            voterUserId: voterUserIdString, // Convert to string
+            answerUrl: `${
+              process.env.FRONTEND_BASE_URL || 'http://localhost:5173'
+            }/question/${answer.question}#answer-${answer._id}`,
+          }
+        );
+      }
     }
 
     await answer.save();
@@ -56,7 +117,10 @@ class AnswerService {
   }
 
   async downvoteAnswer(answerId, userId) {
-    const answer = await Answer.findById(answerId);
+    const answer = await Answer.findById(answerId).populate(
+      'user',
+      'name nickName email'
+    );
     if (!answer) throw new Error('Answer not found');
 
     const hasDownvoted = answer.downvotedBy.includes(userId);
@@ -67,6 +131,29 @@ class AnswerService {
     } else {
       answer.downvotedBy.push(userId);
       if (hasUpvoted) answer.upvotedBy.pull(userId);
+
+      // FIX: Convert ObjectId to string
+      const answerOwnerIdString = answer.user?._id?.toString();
+      const voterUserIdString = userId.toString();
+
+      // Send notification to answer owner about downvote (if not self-vote)
+      if (answer.user && answerOwnerIdString !== voterUserIdString) {
+        const question = await Question.findById(answer.question);
+        await NotificationService.createNotification(
+          answerOwnerIdString, // Convert to string
+          'answer_downvote',
+          {
+            answerId: answer._id.toString(), // Convert to string
+            questionId: answer.question.toString(), // Convert to string
+            questionTitle: question?.title || 'Unknown Question',
+            totalDownvotes: answer.downvotedBy.length + 1,
+            voterUserId: voterUserIdString, // Convert to string
+            answerUrl: `${
+              process.env.FRONTEND_BASE_URL || 'http://localhost:5173'
+            }/question/${answer.question}#answer-${answer._id}`,
+          }
+        );
+      }
     }
 
     await answer.save();

@@ -1,5 +1,6 @@
 const questionRepository = require('../../repository/question.repository');
 const Question = require('../../models/Question.model');
+const NotificationService = require('../common/notification.service');
 
 async function getQuestionsByType(type) {
   switch (type) {
@@ -52,7 +53,10 @@ async function getUserQuestions(userId) {
 }
 
 async function upvoteQuestion(questionId, userId) {
-  const question = await Question.findById(questionId);
+  const question = await Question.findById(questionId).populate(
+    'user',
+    'name nickName email'
+  );
   if (!question) throw new Error('Question not found');
 
   const hasUpvoted = question.upvotedBy.includes(userId);
@@ -63,6 +67,27 @@ async function upvoteQuestion(questionId, userId) {
   } else {
     question.upvotedBy.push(userId);
     if (hasDownvoted) question.downvotedBy.pull(userId);
+
+    //Convert ObjectId to string
+    const questionOwnerIdString = question.user._id.toString();
+    const voterUserIdString = userId.toString();
+
+    // Send notification to question owner about upvote (if not self-vote)
+    if (question.user && questionOwnerIdString !== voterUserIdString) {
+      await NotificationService.createNotification(
+        questionOwnerIdString, // Convert to string
+        'question_upvote',
+        {
+          questionId: question._id.toString(), // Convert to string
+          questionTitle: question.title,
+          totalUpvotes: question.upvotedBy.length + 1,
+          voterUserId: voterUserIdString, // Convert to string
+          questionUrl: `${
+            process.env.FRONTEND_BASE_URL || 'http://localhost:5173'
+          }/question/${question._id}`,
+        }
+      );
+    }
   }
 
   await question.save();
@@ -74,8 +99,12 @@ async function upvoteQuestion(questionId, userId) {
     userDownvoted: question.downvotedBy.includes(userId),
   };
 }
+
 async function downvoteQuestion(questionId, userId) {
-  const question = await Question.findById(questionId);
+  const question = await Question.findById(questionId).populate(
+    'user',
+    'name nickName email'
+  );
   if (!question) throw new Error('Question not found');
 
   const hasDownvoted = question.downvotedBy.includes(userId);
@@ -86,6 +115,27 @@ async function downvoteQuestion(questionId, userId) {
   } else {
     question.downvotedBy.push(userId);
     if (hasUpvoted) question.upvotedBy.pull(userId);
+
+    // Convert ObjectId to string
+    const questionOwnerIdString = question.user._id.toString();
+    const voterUserIdString = userId.toString();
+
+    // Send notification to question owner about downvote (if not self-vote)
+    if (question.user && questionOwnerIdString !== voterUserIdString) {
+      await NotificationService.createNotification(
+        questionOwnerIdString, // Convert to string
+        'question_downvote',
+        {
+          questionId: question._id.toString(), // Convert to string
+          questionTitle: question.title,
+          totalDownvotes: question.downvotedBy.length + 1,
+          voterUserId: voterUserIdString, // Convert to string
+          questionUrl: `${
+            process.env.FRONTEND_BASE_URL || 'http://localhost:5173'
+          }/question/${question._id}`,
+        }
+      );
+    }
   }
 
   await question.save();
