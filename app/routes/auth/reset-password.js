@@ -9,6 +9,6 @@ const auth = require('../../middleware/App.middleware');
  * @access Private (requires JWT token)
  * @body { newPassword: string }
  */
-router.put('/', auth.auth, resetPasswordController.resetPassword);
+router.put('/', auth, resetPasswordController.resetPassword);
 
 module.exports = router;
