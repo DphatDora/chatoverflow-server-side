@@ -1,4 +1,5 @@
 const blogRepository = require('../../repository/blog.repository');
+const NotificationService = require('../common/notification.service');
 
 exports.createBlog = async (blogReq) => {
   const { title, content_html, summary, coverImage, tags, user } = blogReq;
@@ -67,7 +68,35 @@ exports.voteBlog = async (blogSlug, userId, voteType) => {
     throw new Error('invalid vote type');
   }
 
-  return await blogRepository.voteBlog(blogSlug, userId, voteType);
+  const updatedBlog = await blogRepository.voteBlog(blogSlug, userId, voteType);
+
+  // Send notification for blog upvote
+  if (voteType === 'upvote' && updatedBlog) {
+    const blogOwnerIdString = updatedBlog.user._id.toString();
+    const voterUserIdString = userId.toString();
+
+    if (
+      blogOwnerIdString !== voterUserIdString &&
+      updatedBlog.upvotedBy.includes(userId)
+    ) {
+      await NotificationService.createNotification(
+        blogOwnerIdString,
+        'blog_upvote',
+        {
+          blogId: updatedBlog._id.toString(),
+          blogTitle: updatedBlog.title,
+          blogSlug: updatedBlog.slug,
+          totalUpvotes: updatedBlog.upvotedBy.length,
+          voterUserId: voterUserIdString,
+          blogUrl: `${
+            process.env.FRONTEND_BASE_URL || 'http://localhost:5173'
+          }/blog/${updatedBlog.slug}`,
+        }
+      );
+    }
+  }
+
+  return updatedBlog;
 };
 
 exports.createComment = async (blogSlug, userId, content) => {
@@ -86,7 +115,31 @@ exports.createComment = async (blogSlug, userId, content) => {
     blog: blog._id,
   };
 
-  return await blogRepository.createComment(commentData);
+  const comment = await blogRepository.createComment(commentData);
+
+  // Send notification to blog owner
+  const blogOwnerIdString = blog.user._id.toString();
+  const commenterIdString = userId.toString();
+
+  if (blogOwnerIdString !== commenterIdString) {
+    await NotificationService.createNotification(
+      blogOwnerIdString,
+      'new_blog_comment',
+      {
+        blogId: blog._id.toString(),
+        blogTitle: blog.title,
+        blogSlug: blog.slug,
+        commentContent:
+          content.length > 200 ? content.substring(0, 200) + '...' : content,
+        commenterId: commenterIdString,
+        blogUrl: `${
+          process.env.FRONTEND_BASE_URL || 'http://localhost:5173'
+        }/blog/${blog.slug}`,
+      }
+    );
+  }
+
+  return comment;
 };
 
 exports.getCommentsByBlog = async (blogSlug, req) => {
@@ -106,7 +159,40 @@ exports.voteComment = async (commentId, userId, voteType) => {
     throw new Error('invalid vote type');
   }
 
-  return await blogRepository.voteComment(commentId, userId, voteType);
+  const updatedComment = await blogRepository.voteComment(
+    commentId,
+    userId,
+    voteType
+  );
+
+  // Send notification for comment upvote
+  if (voteType === 'upvote' && updatedComment) {
+    const commentOwnerIdString = updatedComment.user._id.toString();
+    const voterUserIdString = userId.toString();
+
+    if (
+      commentOwnerIdString !== voterUserIdString &&
+      updatedComment.upvotedBy.includes(userId)
+    ) {
+      await NotificationService.createNotification(
+        commentOwnerIdString,
+        'blog_comment_upvote',
+        {
+          commentId: updatedComment._id.toString(),
+          blogId: updatedComment.blog._id.toString(),
+          blogTitle: updatedComment.blog.title,
+          blogSlug: updatedComment.blog.slug,
+          totalUpvotes: updatedComment.upvotedBy.length,
+          voterUserId: voterUserIdString,
+          commentUrl: `${
+            process.env.FRONTEND_BASE_URL || 'http://localhost:5173'
+          }/blog/${updatedComment.blog.slug}#comment-${updatedComment._id}`,
+        }
+      );
+    }
+  }
+
+  return updatedComment;
 };
 
 exports.checkBlogVote = async (slug, userId) => {
