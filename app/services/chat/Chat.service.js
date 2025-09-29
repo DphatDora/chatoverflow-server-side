@@ -1,15 +1,11 @@
-const chatRepository = require('../../repository/chat.repository');
 const User = require('../../models/User.model');
+const chatRepository = require('../../repository/chat.repository');
 
 exports.getUserConversations = async (userId) => {
   const conversations = await chatRepository.getConversationsByUserId(userId);
 
   const conversationsWithTargets = await Promise.all(
     conversations.map(async (conv) => {
-      /* 
-        Maybe we need call user repository
-        To keep things simple, i'll temporarily find user right here.
-      */
       const targetUserId = conv.participantIDs.find((id) => id !== userId);
       const targetUser = await User.findById(targetUserId);
 
@@ -22,4 +18,45 @@ exports.getUserConversations = async (userId) => {
   );
 
   return conversationsWithTargets;
+};
+
+exports.getConversationMessages = async (conversationId) => {
+  const messages = await chatRepository.getMessagesByConversationId(
+    conversationId
+  );
+
+  const messagesViewModel = await Promise.all(
+    messages.map(async (message) => {
+      const sender = await User.findById(message.senderId);
+      const senderName = sender.name;
+
+      return {
+        id: message._id.toString(),
+        senderId: message.senderId,
+        senderName: senderName,
+        content: message.content,
+        createdAt: message.createdAt,
+      };
+    })
+  );
+
+  return messagesViewModel;
+};
+
+exports.sendMessage = async (conversationId, senderId, content) => {
+  const newMessage = await chatRepository.createMessage(
+    conversationId,
+    senderId,
+    content
+  );
+
+  const sender = await User.findById(senderId);
+
+  return {
+    id: newMessage._id.toString(),
+    senderId: newMessage.senderId,
+    senderName: sender.name,
+    content: newMessage.content,
+    createdAt: newMessage.createdAt,
+  };
 };

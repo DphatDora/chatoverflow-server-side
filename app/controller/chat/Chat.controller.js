@@ -17,3 +17,58 @@ exports.getConversations = async (req, res) => {
     res.status(500).json({ success: false, error: error.message });
   }
 };
+
+exports.getMessages = async (req, res) => {
+  try {
+    const conversationId = req.params.conversationId;
+
+    if (!conversationId) {
+      return res
+        .status(400)
+        .json({ success: false, error: 'Conversation ID is required' });
+    }
+
+    const messages = await chatService.getConversationMessages(conversationId);
+
+    res.json({ success: true, data: messages });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+};
+
+exports.sendMessage = async (req, res) => {
+  try {
+    const { conversationId, senderId, content } = req.body;
+
+    if (!conversationId) {
+      return res.status(400).json({
+        success: false,
+        error: 'Conversation ID is required',
+      });
+    }
+
+    if (!senderId) {
+      return res.status(400).json({
+        success: false,
+        error: 'Sender ID is required',
+      });
+    }
+
+    if (!content || !content.trim()) {
+      return res.status(400).json({
+        success: false,
+        error: 'Message content is required',
+      });
+    }
+
+    const message = await chatService.sendMessage(
+      conversationId,
+      senderId,
+      content.trim()
+    );
+
+    res.status(201).json({ success: true, data: message });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+};
