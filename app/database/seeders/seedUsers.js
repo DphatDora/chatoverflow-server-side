@@ -30,7 +30,7 @@ async function seedUsers() {
           street: `Street ${i}`,
         },
         gender: genders[i % 3],
-        status: statuses[i % 4],
+        status: statuses[0],
       });
     }
 
