@@ -72,3 +72,36 @@ exports.sendMessage = async (req, res) => {
     res.status(500).json({ success: false, error: error.message });
   }
 };
+
+exports.createConversation = async (req, res) => {
+  try {
+    const { userId1, userId2 } = req.body;
+
+    if (!userId1) {
+      return res.status(400).json({
+        success: false,
+        error: 'User ID 1 is required',
+      });
+    }
+
+    if (!userId2) {
+      return res.status(400).json({
+        success: false,
+        error: 'User ID 2 is required',
+      });
+    }
+
+    if (userId1 === userId2) {
+      return res.status(400).json({
+        success: false,
+        error: 'Cannot create conversation with yourself',
+      });
+    }
+
+    const conversation = await chatService.createConversation(userId1, userId2);
+
+    res.status(201).json({ success: true, data: conversation });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+};

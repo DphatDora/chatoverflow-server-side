@@ -22,3 +22,17 @@ exports.createMessage = async (conversationId, senderId, content) => {
 
   return await message.save();
 };
+
+exports.findConversationByParticipants = async (userId1, userId2) => {
+  return await Conversation.findOne({
+    participantIDs: { $all: [userId1, userId2] },
+  });
+};
+
+exports.createConversation = async (userId1, userId2) => {
+  const conversation = new Conversation({
+    participantIDs: [userId1, userId2],
+  });
+
+  return await conversation.save();
+};

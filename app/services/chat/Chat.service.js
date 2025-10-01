@@ -60,3 +60,37 @@ exports.sendMessage = async (conversationId, senderId, content) => {
     createdAt: newMessage.createdAt,
   };
 };
+
+exports.createConversation = async (userId1, userId2) => {
+  /* Check if conversation already exists */
+  const existingConversation =
+    await chatRepository.findConversationByParticipants(userId1, userId2);
+
+  if (existingConversation) {
+    /* In case conversation exists, we still need to send back the target user info */
+    const targetUserId = existingConversation.participantIDs.find(
+      (id) => id !== userId1
+    );
+    const targetUser = await User.findById(targetUserId);
+
+    return {
+      id: existingConversation._id.toString(),
+      targetName: targetUser.name,
+      targetAvatar: targetUser.avatar,
+      isNew: false,
+    };
+  }
+
+  const newConversation = await chatRepository.createConversation(
+    userId1,
+    userId2
+  );
+  const targetUser = await User.findById(userId2);
+
+  return {
+    id: newConversation._id.toString(),
+    targetName: targetUser.name,
+    targetAvatar: targetUser.avatar,
+    isNew: true,
+  };
+};
