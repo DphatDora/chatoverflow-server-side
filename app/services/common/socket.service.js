@@ -3,26 +3,13 @@ const jwt = require('jsonwebtoken');
 class SocketService {
   constructor() {
     this.io = null;
-    this.connectedUsers = new Map(); // userId -> { socketId, connectTime, lastActivity }
+    this.connectedUsers = new Map();
   }
 
-  // Initialize socket.io
-  initialize(server) {
-    const { Server } = require('socket.io');
-
-    this.io = new Server(server, {
-      cors: {
-        origin: [
-          'http://localhost:5173',
-          'https://chatoverflow-client.vercel.app',
-        ],
-        methods: ['GET', 'POST'],
-        credentials: true,
-      },
-    });
-
+  // Accept the io instance that was created in bin/www
+  initialize(io) {
+    this.io = io;
     this.setupEventHandlers();
-    console.log('✅ Socket.io initialized');
   }
 
   setupEventHandlers() {

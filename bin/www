@@ -1,44 +1,34 @@
 #!/usr/bin/env node
-
-/**
- * Module dependencies.
- */
-
 var app = require('../app');
 var debug = require('debug')('server-side:server');
 var http = require('http');
+
 var { Server } = require('socket.io');
 var setupChatSocket = require('../app/sockets/chat.socket');
+const socketService = require('../app/services/common/socket.service');
 
+// Default config
 var port = normalizePort(process.env.PORT || '3000');
 app.set('port', port);
-
 var server = http.createServer(app);
 
-/**
-
- * Initialize Socket.io
- */
-const socketService = require('../app/services/common/socket.service');
-socketService.initialize(server);
-
-/**
- * Listen on provided port, on all network interfaces.
-
- */
-var io = new Server(server, {
+// Initialize Socket.io, this should be the sole instance of entire app.
+const io = new Server(server, {
   cors: {
-    origin: ['http://localhost:5173'],
+    origin: ['http://localhost:5173', 'https://chatoverflow-client.vercel.app'],
     methods: ['GET', 'POST'],
     credentials: true,
   },
 });
-
-// Setup chat socket handlers
-setupChatSocket(io);
-// Make io available to other parts of the app
 app.set('io', io);
 
+// Initialize socket for all features
+setupChatSocket(io);
+socketService.initialize(io);
+
+/* ------------------------------------------------------------------------------------ */
+/* ------------------------------------------------------------------------------------ */
+/* ------------------------------------------------------------------------------------ */
 server.listen(port);
 server.on('error', onError);
 server.on('listening', onListening);
