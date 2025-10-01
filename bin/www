@@ -7,21 +7,16 @@
 var app = require('../app');
 var debug = require('debug')('server-side:server');
 var http = require('http');
-
-/**
- * Get port from environment and store in Express.
- */
+var { Server } = require('socket.io');
+var setupChatSocket = require('../app/sockets/chat.socket');
 
 var port = normalizePort(process.env.PORT || '3000');
 app.set('port', port);
 
-/**
- * Create HTTP server.
- */
-
 var server = http.createServer(app);
 
 /**
+
  * Initialize Socket.io
  */
 const socketService = require('../app/services/common/socket.service');
@@ -29,15 +24,24 @@ socketService.initialize(server);
 
 /**
  * Listen on provided port, on all network interfaces.
+
  */
+var io = new Server(server, {
+  cors: {
+    origin: ['http://localhost:5173'],
+    methods: ['GET', 'POST'],
+    credentials: true,
+  },
+});
+
+// Setup chat socket handlers
+setupChatSocket(io);
+// Make io available to other parts of the app
+app.set('io', io);
 
 server.listen(port);
 server.on('error', onError);
 server.on('listening', onListening);
-
-/**
- * Normalize a port into a number, string, or false.
- */
 
 function normalizePort(val) {
   var port = parseInt(val, 10);
@@ -54,10 +58,6 @@ function normalizePort(val) {
 
   return false;
 }
-
-/**
- * Event listener for HTTP server "error" event.
- */
 
 function onError(error) {
   if (error.syscall !== 'listen') {
@@ -81,12 +81,9 @@ function onError(error) {
   }
 }
 
-/**
- * Event listener for HTTP server "listening" event.
- */
-
 function onListening() {
   var addr = server.address();
   var bind = typeof addr === 'string' ? 'pipe ' + addr : 'port ' + addr.port;
   debug('Listening on ' + bind);
+  console.log('Socket.IO server running on port ' + port);
 }
