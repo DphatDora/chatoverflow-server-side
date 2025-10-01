@@ -16,7 +16,15 @@ app.set('port', port);
 var server = http.createServer(app);
 
 /**
- * Create Socket.IO instance and attach to server
+
+ * Initialize Socket.io
+ */
+const socketService = require('../app/services/common/socket.service');
+socketService.initialize(server);
+
+/**
+ * Listen on provided port, on all network interfaces.
+
  */
 var io = new Server(server, {
   cors: {

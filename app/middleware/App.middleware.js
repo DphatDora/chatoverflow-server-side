@@ -32,6 +32,7 @@ const auth = (req, res, next) => {
       const token = req.headers.authorization.split(' ')[1];
       try {
         const decoded = jwt.verify(token, process.env.JWT_ACCESS_SECRET);
+        console.log('decoded', decoded);
         // Kiểm tra token có hết hạn không
         const currentTime = Math.floor(Date.now() / 1000);
         if (decoded.exp && decoded.exp < currentTime) {
@@ -39,6 +40,7 @@ const auth = (req, res, next) => {
         }
         // Gắn trực tiếp vào request
         req.userId = decoded.sub;
+        console.log('userId', req.userId);
         next();
       } catch (error) {
         if (error.name === 'TokenExpiredError') {

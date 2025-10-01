@@ -17,6 +17,7 @@ const UserSchema = new mongoose.Schema(
     email: { type: String, required: true, unique: true },
     password: { type: String, required: false },
     avatar: String,
+    bio: { type: String, maxlength: 300 },
     dateOfBirth: { type: Date },
     address: AddressSchema,
     gender: {
@@ -26,8 +27,10 @@ const UserSchema = new mongoose.Schema(
     },
     status: {
       type: String,
+
       enum: ['active', 'inactive', 'banned', 'pending'],
       default: 'pending',
+
     },
     tempPasswordHash: String,
   },
