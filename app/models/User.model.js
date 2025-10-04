@@ -27,10 +27,12 @@ const UserSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ['active', 'inactive', 'banned', 'pending'], // thêm pending cho tài khoản chưa verify
-      default: 'pending', // mặc định là pending khi đăng ký
+
+      enum: ['active', 'inactive', 'banned', 'pending'],
+      default: 'pending',
+
     },
-    tempPasswordHash: String, // Temporary storage for signup process
+    tempPasswordHash: String,
   },
   { timestamps: true }
 );

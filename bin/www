@@ -1,37 +1,37 @@
 #!/usr/bin/env node
-
-/**
- * Module dependencies.
- */
-
 var app = require('../app');
 var debug = require('debug')('server-side:server');
 var http = require('http');
 
-/**
- * Get port from environment and store in Express.
- */
+var { Server } = require('socket.io');
+var setupChatSocket = require('../app/sockets/chat.socket');
+const socketService = require('../app/services/common/socket.service');
 
+// Default config
 var port = normalizePort(process.env.PORT || '3000');
 app.set('port', port);
-
-/**
- * Create HTTP server.
- */
-
 var server = http.createServer(app);
 
-/**
- * Listen on provided port, on all network interfaces.
- */
+// Initialize Socket.io, this should be the sole instance of entire app.
+const io = new Server(server, {
+  cors: {
+    origin: ['http://localhost:5173', 'https://chatoverflow-client.vercel.app'],
+    methods: ['GET', 'POST'],
+    credentials: true,
+  },
+});
+app.set('io', io);
 
+// Initialize socket for all features
+setupChatSocket(io);
+socketService.initialize(io);
+
+/* ------------------------------------------------------------------------------------ */
+/* ------------------------------------------------------------------------------------ */
+/* ------------------------------------------------------------------------------------ */
 server.listen(port);
 server.on('error', onError);
 server.on('listening', onListening);
-
-/**
- * Normalize a port into a number, string, or false.
- */
 
 function normalizePort(val) {
   var port = parseInt(val, 10);
@@ -49,18 +49,12 @@ function normalizePort(val) {
   return false;
 }
 
-/**
- * Event listener for HTTP server "error" event.
- */
-
 function onError(error) {
   if (error.syscall !== 'listen') {
     throw error;
   }
 
-  var bind = typeof port === 'string'
-    ? 'Pipe ' + port
-    : 'Port ' + port;
+  var bind = typeof port === 'string' ? 'Pipe ' + port : 'Port ' + port;
 
   // handle specific listen errors with friendly messages
   switch (error.code) {
@@ -77,14 +71,9 @@ function onError(error) {
   }
 }
 
-/**
- * Event listener for HTTP server "listening" event.
- */
-
 function onListening() {
   var addr = server.address();
-  var bind = typeof addr === 'string'
-    ? 'pipe ' + addr
-    : 'port ' + addr.port;
+  var bind = typeof addr === 'string' ? 'pipe ' + addr : 'port ' + addr.port;
   debug('Listening on ' + bind);
+  console.log('Socket.IO server running on port ' + port);
 }

@@ -1,7 +1,9 @@
 const answerRepository = require('../../repository/answer.repository');
 const Answer = require('../../models/Answer.model');
+const Question = require('../../models/Question.model');
 const mongoose = require('mongoose');
 const { DEFAULT_ANSWER_SORT } = require('../../constants/filters/answer');
+const NotificationService = require('../common/notification.service');
 
 class AnswerService {
   async getAnswersByQuestion(
@@ -28,11 +30,44 @@ class AnswerService {
       user: userId,
       content,
     });
+
+    // Send notification to question owner
+    const question = await Question.findById(questionId).populate(
+      'user',
+      'name nickName email'
+    );
+    const questionOwnerIdString = question?.user?._id?.toString();
+    const answerUserIdString = userId.toString();
+
+    if (
+      question &&
+      question.user &&
+      questionOwnerIdString !== answerUserIdString
+    ) {
+      await NotificationService.createNotification(
+        questionOwnerIdString,
+        'new_answer',
+        {
+          questionId: question._id.toString(),
+          questionTitle: question.title,
+          answerContent:
+            content.length > 200 ? content.substring(0, 200) + '...' : content,
+          answererId: answerUserIdString,
+          questionUrl: `${
+            process.env.FRONTEND_BASE_URL || 'http://localhost:5173'
+          }/question/${question._id}`,
+        }
+      );
+    }
+
     return answer;
   }
 
   async upvoteAnswer(answerId, userId) {
-    const answer = await Answer.findById(answerId);
+    const answer = await Answer.findById(answerId).populate(
+      'user',
+      'name nickName email'
+    );
     if (!answer) throw new Error('Answer not found');
 
     const hasUpvoted = answer.upvotedBy.includes(userId);
@@ -43,6 +78,28 @@ class AnswerService {
     } else {
       answer.upvotedBy.push(userId);
       if (hasDownvoted) answer.downvotedBy.pull(userId);
+
+      // Send notification for upvote
+      const answerOwnerIdString = answer.user?._id?.toString();
+      const voterUserIdString = userId.toString();
+
+      if (answer.user && answerOwnerIdString !== voterUserIdString) {
+        const question = await Question.findById(answer.question);
+        await NotificationService.createNotification(
+          answerOwnerIdString,
+          'answer_upvote',
+          {
+            answerId: answer._id.toString(),
+            questionId: answer.question.toString(),
+            questionTitle: question?.title || 'Unknown Question',
+            totalUpvotes: answer.upvotedBy.length + 1,
+            voterUserId: voterUserIdString,
+            answerUrl: `${
+              process.env.FRONTEND_BASE_URL || 'http://localhost:5173'
+            }/question/${answer.question}#answer-${answer._id}`,
+          }
+        );
+      }
     }
 
     await answer.save();
@@ -56,7 +113,10 @@ class AnswerService {
   }
 
   async downvoteAnswer(answerId, userId) {
-    const answer = await Answer.findById(answerId);
+    const answer = await Answer.findById(answerId).populate(
+      'user',
+      'name nickName email'
+    );
     if (!answer) throw new Error('Answer not found');
 
     const hasDownvoted = answer.downvotedBy.includes(userId);
@@ -67,6 +127,28 @@ class AnswerService {
     } else {
       answer.downvotedBy.push(userId);
       if (hasUpvoted) answer.upvotedBy.pull(userId);
+
+      // Send notification for downvote
+      const answerOwnerIdString = answer.user?._id?.toString();
+      const voterUserIdString = userId.toString();
+
+      if (answer.user && answerOwnerIdString !== voterUserIdString) {
+        const question = await Question.findById(answer.question);
+        await NotificationService.createNotification(
+          answerOwnerIdString,
+          'answer_downvote',
+          {
+            answerId: answer._id.toString(),
+            questionId: answer.question.toString(),
+            questionTitle: question?.title || 'Unknown Question',
+            totalDownvotes: answer.downvotedBy.length + 1,
+            voterUserId: voterUserIdString,
+            answerUrl: `${
+              process.env.FRONTEND_BASE_URL || 'http://localhost:5173'
+            }/question/${answer.question}#answer-${answer._id}`,
+          }
+        );
+      }
     }
 
     await answer.save();
