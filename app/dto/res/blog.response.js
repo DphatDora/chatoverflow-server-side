@@ -1,11 +1,25 @@
 class BlogItemResponse {
-  constructor({ id, coverImage, title, slug, summary, author, createdAt }) {
+  constructor({
+    id,
+    coverImage,
+    title,
+    slug,
+    summary,
+    author,
+    tags,
+    upvotes,
+    downvotes,
+    createdAt,
+  }) {
     this.id = id;
     this.coverImage = coverImage;
     this.title = title;
     this.slug = slug;
     this.summary = summary;
     this.author = author; // { avatar, nickName }
+    this.tags = tags;
+    this.upvotes = upvotes;
+    this.downvotes = downvotes;
     this.createdAt = createdAt;
   }
 }
@@ -21,6 +35,9 @@ const NewBlogItemResponse = (blog) =>
       avatar: blog.user?.avatar,
       nickName: blog.user?.nickName,
     },
+    tags: blog.tags || [],
+    upvotes: blog.upvotedBy?.length || 0,
+    downvotes: blog.downvotedBy?.length || 0,
     createdAt: blog.createdAt,
   });
 
