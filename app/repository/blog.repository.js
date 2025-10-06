@@ -122,14 +122,18 @@ exports.voteComment = async (commentId, userId, voteType) => {
       commentId,
       { $pull: { [voteField]: userId } },
       { new: true }
-    ).populate('user', 'avatar nickName');
+    )
+      .populate('user', 'avatar nickName')
+      .populate('blog', 'title slug');
   } else {
     // Thêm vote
     return await BlogComment.findByIdAndUpdate(
       commentId,
       { $addToSet: { [voteField]: userId } },
       { new: true }
-    ).populate('user', 'avatar nickName');
+    )
+      .populate('user', 'avatar nickName')
+      .populate('blog', 'title slug');
   }
 };
 

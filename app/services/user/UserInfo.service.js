@@ -1,6 +1,7 @@
 const User = require('../../models/User.model');
 const Question = require('../../models/Question.model');
 const Answer = require('../../models/Answer.model');
+const Blog = require('../../models/Blog.model');
 const bcrypt = require('bcrypt');
 
 async function updateUserInfo(userId, updateData) {
@@ -158,4 +159,134 @@ async function getUserProfile(userId, page = 1, limit = 10) {
   }
 }
 
-module.exports = { updateUserInfo, getUserProfile };
+async function getUserStatistics(userId) {
+  try {
+    const user = await User.findById(userId);
+    if (!user || user.status !== 'active') {
+      return {
+        success: false,
+        message: !user
+          ? 'Không tìm thấy người dùng'
+          : 'Tài khoản chưa được kích hoạt',
+      };
+    }
+
+    // Lấy thống kê cho người dùng
+    const totalQuestions = await Question.countDocuments({ user: userId });
+    const totalAnswers = await Answer.countDocuments({ user: userId });
+    const totalBlogs = await Blog.countDocuments({ user: userId });
+    const totalViewsAgg = await Question.aggregate([
+      { $match: { user: user._id } },
+      { $group: { _id: null, totalViews: { $sum: '$views' } } },
+    ]);
+    const totalViews =
+      totalViewsAgg.length > 0 ? totalViewsAgg[0].totalViews : 0;
+    const totalVotesAgg = await Question.aggregate([
+      { $match: { user: user._id } },
+      {
+        $project: {
+          upvotes: { $size: '$upvotedBy' },
+          downvotes: { $size: '$downvotedBy' },
+        },
+      },
+      {
+        $group: {
+          _id: null,
+          totalUpvotes: { $sum: '$upvotes' },
+          totalDownvotes: { $sum: '$downvotes' },
+        },
+      },
+    ]);
+    const totalVotes =
+      totalVotesAgg.length > 0
+        ? {
+            upvotes: totalVotesAgg[0].totalUpvotes,
+            downvotes: totalVotesAgg[0].totalDownvotes,
+          }
+        : { upvotes: 0, downvotes: 0 };
+    const joinDate = user.createdAt;
+
+    // Lấy dữ liệu lịch sử hoạt động (số câu hỏi và câu trả lời theo ngày trong 30 ngày gần nhất)
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    // Thống kê số câu hỏi theo ngày
+    const questionsByDate = await Question.aggregate([
+      { $match: { user: user._id, createdAt: { $gte: thirtyDaysAgo } } },
+      {
+        $group: {
+          _id: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } },
+          totalQuestions: { $sum: 1 },
+        },
+      },
+    ]);
+
+    // Thống kê số câu trả lời theo ngày
+    const answersByDate = await Answer.aggregate([
+      { $match: { user: user._id, createdAt: { $gte: thirtyDaysAgo } } },
+      {
+        $group: {
+          _id: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } },
+          totalAnswers: { $sum: 1 },
+        },
+      },
+    ]);
+
+    // Thống kê blog theo ngày
+    const blogsByDate = await Blog.aggregate([
+      { $match: { user: user._id, createdAt: { $gte: thirtyDaysAgo } } },
+      {
+        $group: {
+          _id: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } },
+          totalBlogs: { $sum: 1 },
+        },
+      },
+    ]);
+
+    // Kết hợp dữ liệu cho từng ngày
+    const historyData = [];
+    for (let i = 0; i < 30; i++) {
+      const date = new Date();
+      date.setDate(date.getDate() - i);
+      const dateString = date.toISOString().split('T')[0];
+
+      const questionStats = questionsByDate.find(
+        (item) => item._id === dateString
+      );
+      const answerStats = answersByDate.find((item) => item._id === dateString);
+      const blogStats = blogsByDate.find((item) => item._id === dateString);
+
+      historyData.push({
+        date: dateString,
+        questions: questionStats ? questionStats.totalQuestions : 0,
+        answers: answerStats ? answerStats.totalAnswers : 0,
+        blogs: blogStats ? blogStats.totalBlogs : 0,
+        total:
+          (questionStats ? questionStats.totalQuestions : 0) +
+          (answerStats ? answerStats.totalAnswers : 0) +
+          (blogStats ? blogStats.totalBlogs : 0),
+      });
+    }
+    const responseData = {
+      totalQuestions,
+      totalAnswers,
+      totalBlogs,
+      totalViews,
+      totalVotes,
+      joinDate,
+      historyData: historyData,
+    };
+    return {
+      success: true,
+      message: 'Lấy thông tin thống kê thành công',
+      data: responseData,
+    };
+  } catch (error) {
+    console.error('Get user statistics error:', error);
+    return {
+      success: false,
+      message: 'Lỗi hệ thống khi lấy thông tin thống kê',
+    };
+  }
+}
+
+module.exports = { updateUserInfo, getUserProfile, getUserStatistics };

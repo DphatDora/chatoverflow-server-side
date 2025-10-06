@@ -67,3 +67,27 @@ exports.getUserProfile = async (req, res) => {
       .json(ApiResponse.error('Lỗi hệ thống khi lấy thông tin profile'));
   }
 };
+
+exports.getUserStatistics = async (req, res) => {
+  try {
+    const userId = req.userId;
+    console.log('userId:', userId);
+    if (!userId) {
+      return res
+        .status(401)
+        .json(ApiResponse.error('Phiên đăng nhập không hợp lệ'));
+    }
+    const result = await userInfoService.getUserStatistics(userId);
+    if (!result.success) {
+      return res.status(400).json(ApiResponse.error(result.message));
+    }
+    return res
+      .status(200)
+      .json(ApiResponse.success(result.message, result.data));
+  } catch (error) {
+    console.error('Get user statistics error:', error);
+    return res
+      .status(500)
+      .json(ApiResponse.error('Lỗi hệ thống khi lấy thông tin thống kê'));
+  }
+};

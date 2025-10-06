@@ -6,6 +6,6 @@ router.use('/refresh-token', require('./refresh-token'));
 router.use('/logout', require('./logout'));
 router.use('/signup', require('./signup'));
 router.use('/forgot-password', require('./forgot-password'));
-router.use('/reset-password', require('./reset-password'));
+//router.use('/reset-password', require('./reset-password'));
 
 module.exports = router;
