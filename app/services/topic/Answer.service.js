@@ -50,8 +50,6 @@ class AnswerService {
         {
           questionId: question._id.toString(),
           questionTitle: question.title,
-          answerContent:
-            content.length > 200 ? content.substring(0, 200) + '...' : content,
           answererId: answerUserIdString,
           questionUrl: `${
             process.env.FRONTEND_BASE_URL || 'http://localhost:5173'
@@ -96,7 +94,7 @@ class AnswerService {
             voterUserId: voterUserIdString,
             answerUrl: `${
               process.env.FRONTEND_BASE_URL || 'http://localhost:5173'
-            }/question/${answer.question}#answer-${answer._id}`,
+            }/question/${answer.question}`,
           }
         );
       }
@@ -145,7 +143,7 @@ class AnswerService {
             voterUserId: voterUserIdString,
             answerUrl: `${
               process.env.FRONTEND_BASE_URL || 'http://localhost:5173'
-            }/question/${answer.question}#answer-${answer._id}`,
+            }/question/${answer.question}`,
           }
         );
       }

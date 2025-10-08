@@ -8,9 +8,6 @@ const generateEmailContent = (action, payload, user) => {
       html: `
         <h3>Xin chào ${userName}!</h3>
         <p>Có người vừa trả lời câu hỏi "<strong>${payload.questionTitle}</strong>" của bạn.</p>
-        <blockquote style="background: #f8f9fa; padding: 15px; border-left: 4px solid #007bff; margin: 15px 0;">
-          ${payload.answerContent}
-        </blockquote>
         <p>Bạn có thể xem chi tiết tại: <a href="${payload.questionUrl}">Xem câu trả lời</a></p>
         <p><small>Đây là email tự động, vui lòng không trả lời.</small></p>
       `,
@@ -60,9 +57,6 @@ const generateEmailContent = (action, payload, user) => {
       html: `
         <h3>Xin chào ${userName}!</h3>
         <p>Có người vừa bình luận về blog "<strong>${payload.blogTitle}</strong>" của bạn.</p>
-        <blockquote style="background: #f8f9fa; padding: 15px; border-left: 4px solid #007bff; margin: 15px 0;">
-          ${payload.commentContent}
-        </blockquote>
         <p>Bạn có thể xem chi tiết tại: <a href="${payload.blogUrl}">Xem blog</a></p>
         <p><small>Đây là email tự động, vui lòng không trả lời.</small></p>
       `,
