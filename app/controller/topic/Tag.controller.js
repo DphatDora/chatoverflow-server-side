@@ -78,6 +78,50 @@ class TagController {
         .json(ApiResponse.error('Lỗi hệ thống khi đồng bộ tags'));
     }
   }
+
+  /**
+   * GET /api/tag/:tagName/questions?page=1&limit=20
+   * Get questions by tag, ordered by popularity
+   */
+  static async getQuestionsByTag(req, res) {
+    try {
+      const { tagName } = req.params;
+      const page = parseInt(req.query.page, 10) || 1;
+      const limit = req.query.limit ? parseInt(req.query.limit, 10) : 20;
+
+      if (!tagName) {
+        return res.status(400).json(ApiResponse.error('Tag name is required'));
+      }
+
+      const result = await TagService.getQuestionsByTag(tagName, page, limit);
+
+      if (!result.success) {
+        return res.status(404).json(ApiResponse.error(result.message));
+      }
+
+      const { currentPage, totalCount } = result.pagination;
+      const baseUrl = `/tag/${encodeURIComponent(tagName)}/questions`;
+
+      return res.status(200).json(
+        ApiResponse.withPagination(
+          result.message,
+          {
+            questions: result.data,
+            tag: result.tag,
+          },
+          currentPage,
+          limit,
+          baseUrl,
+          totalCount
+        )
+      );
+    } catch (error) {
+      console.error('Get questions by tag controller error:', error);
+      return res
+        .status(500)
+        .json(ApiResponse.error('Lỗi hệ thống khi xử lý yêu cầu'));
+    }
+  }
 }
 
 module.exports = TagController;
