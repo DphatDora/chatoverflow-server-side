@@ -6,15 +6,92 @@ exports.createBlog = async (blogData) => {
   return await blog.save();
 };
 
-exports.getBlogList = async ({ page = 1, limit = 10 }) => {
+exports.getBlogList = async ({ page = 1, limit = 10, sortBy, tags }) => {
   const skip = (page - 1) * limit;
-  const blogs = await Blog.find()
-    .populate('user', 'avatar nickName')
-    .sort({ createdAt: -1 })
-    .skip(skip)
-    .limit(limit);
-  const total = await Blog.countDocuments();
-  return { blogs, total };
+
+  // Build filter query
+  let filterQuery = {};
+
+  // Filter by tags if provided
+  if (tags && tags.length > 0) {
+    filterQuery.tags = { $in: tags };
+  }
+
+  // Handle date filter for last 7 days
+  if (sortBy === 'last_7_days') {
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    filterQuery.createdAt = { $gte: sevenDaysAgo };
+  }
+
+  // Check if aggregation is needed (for vote sorting)
+  const needsAggregation =
+    sortBy === 'highest_votes' || sortBy === 'lowest_votes';
+
+  if (needsAggregation) {
+    // Use aggregation for vote-based sorting
+    const pipeline = [
+      { $match: filterQuery },
+      {
+        $addFields: {
+          voteScore: {
+            $subtract: [
+              { $size: { $ifNull: ['$upvotedBy', []] } },
+              { $size: { $ifNull: ['$downvotedBy', []] } },
+            ],
+          },
+        },
+      },
+      {
+        $sort: {
+          voteScore: sortBy === 'highest_votes' ? -1 : 1,
+          createdAt: -1,
+        },
+      },
+      { $skip: skip },
+      { $limit: limit },
+      {
+        $lookup: {
+          from: 'users',
+          localField: 'user',
+          foreignField: '_id',
+          as: 'user',
+        },
+      },
+      { $unwind: '$user' },
+      {
+        $project: {
+          'user.password': 0,
+          'user.tempPasswordHash': 0,
+          'user.__v': 0,
+        },
+      },
+    ];
+
+    const blogs = await Blog.aggregate(pipeline);
+    const total = await Blog.countDocuments(filterQuery);
+
+    return { blogs, total };
+  } else {
+    // Use regular query for other sorting
+    let sortOptions = { createdAt: -1 }; // Default: newest
+
+    if (sortBy === 'oldest') {
+      sortOptions = { createdAt: 1 };
+    } else if (sortBy === 'last_7_days') {
+      sortOptions = { createdAt: -1 };
+    }
+
+    const blogs = await Blog.find(filterQuery)
+      .populate('user', 'avatar nickName')
+      .sort(sortOptions)
+      .skip(skip)
+      .limit(limit);
+
+    const total = await Blog.countDocuments(filterQuery);
+
+    return { blogs, total };
+  }
 };
 
 exports.getBlogBySlug = async (slug) => {

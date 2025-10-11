@@ -10,6 +10,11 @@ const auth = require('../../middleware/App.middleware');
 router.get('/', TagController.getTags);
 
 /**
+ * GET /api/tag/:tagName/questions?page=1&limit=20 - Get questions by tag ordered by popularity
+ */
+router.get('/:tagName/questions', TagController.getQuestionsByTag);
+
+/**
  * POST /api/tag/sync - Sync tags from questions (Admin only)
  * This endpoint should be protected and called periodically
  */

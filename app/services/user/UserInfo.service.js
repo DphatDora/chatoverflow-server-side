@@ -110,9 +110,35 @@ async function getUserProfile(userId, page = 1, limit = 10) {
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit)
-      .populate('user', 'name nickName')
+      .populate('user', 'name nickName avatar')
       .select('title content tags askedTime views upvotedBy downvotedBy')
       .lean();
+
+    // Lấy answerCount cho tất cả posts một lần
+    const postIds = posts.map((post) => post._id);
+    const answerCounts = await Answer.aggregate([
+      { $match: { question: { $in: postIds } } },
+      { $group: { _id: '$question', count: { $sum: 1 } } },
+    ]);
+    const answerCountMap = {};
+    answerCounts.forEach((item) => {
+      answerCountMap[item._id.toString()] = item.count;
+    });
+    posts.forEach((post) => {
+      post.answerCount = answerCountMap[post._id.toString()] || 0;
+    });
+
+    // Lấy tất cả answers của user và chuyển question thành id
+    const answers = await Answer.find({ user: userId })
+      .sort({ createdAt: -1 })
+      .populate('user', 'name nickName avatar')
+      .populate('question', '_id')
+      .select('question content createdAt upvotedBy downvotedBy')
+      .lean();
+
+    answers.forEach((ans) => {
+      ans.question = ans.question?._id || ans.question;
+    });
 
     // Đếm tổng số posts
     const totalPosts = await Question.countDocuments({ user: userId });
@@ -147,7 +173,9 @@ async function getUserProfile(userId, page = 1, limit = 10) {
           createdAt: user.createdAt,
           updatedAt: user.updatedAt,
           bio: user.bio,
+          avatar: user.avatar,
         },
+        answers: answers,
         posts: postsWithStats,
         statistics: {
           totalPosts,
@@ -211,14 +239,12 @@ async function getUserStatistics(userId) {
         },
       },
     ]);
+    console.log('Total Votes Agg:', totalVotesAgg);
     const totalVotes =
       totalVotesAgg.length > 0
-        ? {
-            upvotes: totalVotesAgg[0].totalUpvotes,
-            downvotes: totalVotesAgg[0].totalDownvotes,
-          }
-        : { upvotes: 0, downvotes: 0 };
-    const joinDate = user.createdAt;
+        ? totalVotesAgg[0].totalUpvotes + totalVotesAgg[0].totalDownvotes
+        : 0;
+    const joinDate = user.createdAt.toISOString().split('T')[0];
 
     // Lấy dữ liệu lịch sử hoạt động (số câu hỏi và câu trả lời theo ngày trong 30 ngày gần nhất)
     const thirtyDaysAgo = new Date();
