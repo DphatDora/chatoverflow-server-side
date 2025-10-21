@@ -26,6 +26,7 @@ router.put(
   upload.single('coverImage'),
   blogController.updateBlog
 );
+router.delete('/:blogSlug', authMiddleware, blogController.deleteBlog);
 router.post('/:blogSlug/vote', authMiddleware, blogController.voteBlog);
 router.post(
   '/:blogSlug/comments',

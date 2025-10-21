@@ -5,6 +5,8 @@ class CommentResponse {
     author,
     upvotes,
     downvotes,
+    upvotedBy,
+    downvotedBy,
     createdAt,
     updatedAt,
   }) {
@@ -13,6 +15,8 @@ class CommentResponse {
     this.author = author; // { avatar, nickName }
     this.upvotes = upvotes;
     this.downvotes = downvotes;
+    this.upvotedBy = upvotedBy;
+    this.downvotedBy = downvotedBy;
     this.createdAt = createdAt;
     this.updatedAt = updatedAt;
   }
@@ -29,6 +33,8 @@ const NewCommentResponse = (comment) =>
     },
     upvotes: comment.upvotedBy?.length || 0,
     downvotes: comment.downvotedBy?.length || 0,
+    upvotedBy: comment.upvotedBy?.map((id) => id.toString()) || [],
+    downvotedBy: comment.downvotedBy?.map((id) => id.toString()) || [],
     createdAt: comment.createdAt,
     updatedAt: comment.updatedAt,
   });

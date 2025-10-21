@@ -229,3 +229,11 @@ exports.checkUserVote = async (blogSlug, userId) => {
 
   return { isUpvoted, isDownvoted };
 };
+
+exports.deleteBlog = async (blogSlug) => {
+  return await Blog.deleteOne({ slug: blogSlug });
+};
+
+exports.deleteCommentsByBlog = async (blogId) => {
+  return await BlogComment.deleteMany({ blog: blogId });
+};

@@ -260,3 +260,27 @@ exports.checkBlogVote = async (req, res) => {
       .json(ApiResponse.error(error.message || 'Blog not found'));
   }
 };
+
+exports.deleteBlog = async (req, res) => {
+  try {
+    const { blogSlug } = req.params;
+    const userId = req.userId;
+
+    const isOwner = await blogService.isBlogOwner(blogSlug, userId);
+    if (!isOwner) {
+      return res
+        .status(StatusCodes.FORBIDDEN)
+        .json(ApiResponse.error('You are not authorized to delete this blog'));
+    }
+
+    await blogService.deleteBlog(blogSlug, userId);
+    res
+      .status(StatusCodes.OK)
+      .json(ApiResponse.success('Blog deleted successfully'));
+  } catch (error) {
+    console.error('Delete blog error:', error);
+    res
+      .status(error.statusCode || StatusCodes.BAD_REQUEST)
+      .json(ApiResponse.error(error.message || 'Failed to delete blog'));
+  }
+};
