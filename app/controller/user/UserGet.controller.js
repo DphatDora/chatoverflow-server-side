@@ -5,7 +5,7 @@ exports.getUsers = async (req, res) => {
   try {
     const page = parseInt(req.query.page, 10) || 1;
     const limit = parseInt(req.query.limit, 10) || 12;
-    const { filter, search } = req.query; // <-- thêm search
+    const { filter, search } = req.query;
 
     const { users, totalUsers } = await getUsers(page, limit, filter, search);
 
