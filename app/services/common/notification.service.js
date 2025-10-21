@@ -99,7 +99,7 @@ async function processEmailNotification(
 
 // Helper function to create notification response
 function createNotificationResponse(notification) {
-  return new NewNotificationResponse(notification);
+  return NewNotificationResponse(notification);
 }
 
 // Main Notification Service
