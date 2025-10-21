@@ -176,6 +176,7 @@ async function voteStatus(questionId, userId) {
     throw new Error('Error fetching vote status');
   }
 }
+
 async function increaseViewCount(questionId) {
   const question = await Question.findByIdAndUpdate(
     questionId,
@@ -193,6 +194,9 @@ async function increaseViewCount(questionId) {
   };
 }
 
+async function getUserVotedQuestions(userId) {
+  return questionRepository.getUserVotedQuestions(userId);
+}
 module.exports = {
   getQuestionsByType,
   getQuestionDetail,
@@ -203,4 +207,5 @@ module.exports = {
   downvoteQuestion,
   voteStatus,
   increaseViewCount,
+  getUserVotedQuestions,
 };

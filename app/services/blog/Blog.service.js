@@ -222,3 +222,7 @@ exports.voteComment = async (commentId, userId, voteType) => {
 exports.checkBlogVote = async (slug, userId) => {
   return await blogRepository.checkUserVote(slug, userId);
 };
+
+exports.getUserVotedBlogs = async (userId) => {
+  return await blogRepository.getUserVotedBlogs(userId);
+};
