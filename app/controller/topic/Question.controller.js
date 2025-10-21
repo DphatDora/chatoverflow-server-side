@@ -212,6 +212,28 @@ async function increaseView(req, res) {
   }
 }
 
+async function deletedQuestion(req, res) {
+  try {
+    const { questionId } = req.params;
+    const userId = req.userId;
+
+    const isOwner = await questionService.isQuestionOwner(questionId, userId);
+    if (!isOwner) {
+      return res
+        .status(403)
+        .json(
+          ApiResponse.error('You are not authorized to delete this question')
+        );
+    }
+
+    await questionService.deleteQuestion(questionId, userId);
+    return res.json(ApiResponse.success('Question deleted successfully'));
+  } catch (err) {
+    console.error(err);
+    return res.status(400).json(ApiResponse.error(err.message));
+  }
+}
+
 module.exports = {
   getQuestions,
   getQuestionDetail,
@@ -222,4 +244,5 @@ module.exports = {
   downvoteQuestion,
   voteStatus,
   increaseView,
+  deletedQuestion,
 };
