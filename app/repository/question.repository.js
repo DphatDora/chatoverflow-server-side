@@ -82,10 +82,98 @@ async function getQuestionsByUserId(userId) {
   return userQuestions;
 }
 
+async function getQuestionsByTag(tagName, page = 1, limit = 20) {
+  const skip = (page - 1) * limit;
+
+  // Find questions with the tag, ordered by popularity
+  // Popularity = views + upvotes * 2 + answers * 3
+  const questions = await Question.aggregate([
+    {
+      $match: {
+        tags: { $in: [tagName] },
+      },
+    },
+    {
+      $lookup: {
+        from: 'answers',
+        localField: '_id',
+        foreignField: 'question',
+        as: 'answers',
+      },
+    },
+    {
+      $addFields: {
+        answerCount: { $size: '$answers' },
+        // Calculate popularity score
+        popularityScore: {
+          $add: [
+            '$views',
+            { $multiply: [{ $size: '$upvotedBy' }, 2] },
+            { $multiply: [{ $size: '$answers' }, 3] },
+          ],
+        },
+      },
+    },
+    {
+      $sort: { popularityScore: -1, createdAt: -1 },
+    },
+    {
+      $skip: skip,
+    },
+    {
+      $limit: limit,
+    },
+    {
+      $lookup: {
+        from: 'users',
+        localField: 'user',
+        foreignField: '_id',
+        as: 'userInfo',
+      },
+    },
+    {
+      $unwind: {
+        path: '$userInfo',
+        preserveNullAndEmptyArrays: true,
+      },
+    },
+    {
+      $project: {
+        title: 1,
+        content: 1,
+        tags: 1,
+        views: 1,
+        upvotedBy: 1,
+        downvotedBy: 1,
+        answerCount: 1,
+        askedTime: 1,
+        createdAt: 1,
+        updatedAt: 1,
+        user: {
+          _id: '$userInfo._id',
+          name: '$userInfo.name',
+          avatar: '$userInfo.avatar',
+        },
+      },
+    },
+  ]);
+
+  // Get total count for pagination
+  const totalCount = await Question.countDocuments({
+    tags: { $in: [tagName] },
+  });
+
+  return {
+    questions,
+    totalCount,
+  };
+}
+
 module.exports = {
   getNewest,
   getTrending,
   getUnanswered,
   getQuestionDetailById,
   getQuestionsByUserId,
+  getQuestionsByTag,
 };

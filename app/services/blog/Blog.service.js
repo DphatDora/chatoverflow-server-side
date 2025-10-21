@@ -1,5 +1,9 @@
 const blogRepository = require('../../repository/blog.repository');
 const NotificationService = require('../common/notification.service');
+const {
+  BLOG_SORT_OPTIONS,
+  DEFAULT_BLOG_SORT,
+} = require('../../constants/filters/blog');
 
 exports.createBlog = async (blogReq) => {
   const { title, content_html, summary, coverImage, tags, user } = blogReq;
@@ -23,8 +27,28 @@ exports.createBlog = async (blogReq) => {
 exports.getBlogList = async (req) => {
   const page = parseInt(req.query.page) || 1;
   const limit = parseInt(req.query.limit) || 4;
+  const sortBy = req.query.sortBy || DEFAULT_BLOG_SORT;
 
-  const { blogs, total } = await blogRepository.getBlogList({ page, limit });
+  // Parse tags from query string
+  let tags = [];
+  if (req.query.tags) {
+    tags = Array.isArray(req.query.tags)
+      ? req.query.tags
+      : req.query.tags.split(',').map((tag) => tag.trim());
+  }
+
+  // Validate sortBy
+  const validSortOptions = Object.values(BLOG_SORT_OPTIONS);
+  const finalSortBy = validSortOptions.includes(sortBy)
+    ? sortBy
+    : DEFAULT_BLOG_SORT;
+
+  const { blogs, total } = await blogRepository.getBlogList({
+    page,
+    limit,
+    sortBy: finalSortBy,
+    tags,
+  });
 
   return { blogs, total, page, limit };
 };

@@ -3,6 +3,7 @@ const Question = require('../../models/Question.model');
 const Answer = require('../../models/Answer.model');
 const Blog = require('../../models/Blog.model');
 const bcrypt = require('bcrypt');
+const mongoose = require('mongoose');
 
 async function updateUserInfo(userId, updateData) {
   try {
@@ -75,12 +76,24 @@ async function updateUserInfo(userId, updateData) {
 
 async function getUserProfile(userId, page = 1, limit = 10) {
   try {
+    // Validate ObjectId
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      console.log('Invalid ObjectId:', userId);
+      return {
+        success: false,
+        message: 'ID người dùng không hợp lệ',
+      };
+    }
+
     // Lấy thông tin user
     const user = await User.findById(userId).select(
       '-password -tempPasswordHash -__v'
     );
 
+    console.log('User found:', !!user);
+
     if (!user || user.status !== 'active') {
+      console.log('User not found or inactive, status:', user?.status);
       return {
         success: false,
         message: !user
@@ -97,9 +110,35 @@ async function getUserProfile(userId, page = 1, limit = 10) {
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit)
-      .populate('user', 'name nickName')
+      .populate('user', 'name nickName avatar')
       .select('title content tags askedTime views upvotedBy downvotedBy')
       .lean();
+
+    // Lấy answerCount cho tất cả posts một lần
+    const postIds = posts.map((post) => post._id);
+    const answerCounts = await Answer.aggregate([
+      { $match: { question: { $in: postIds } } },
+      { $group: { _id: '$question', count: { $sum: 1 } } },
+    ]);
+    const answerCountMap = {};
+    answerCounts.forEach((item) => {
+      answerCountMap[item._id.toString()] = item.count;
+    });
+    posts.forEach((post) => {
+      post.answerCount = answerCountMap[post._id.toString()] || 0;
+    });
+
+    // Lấy tất cả answers của user và chuyển question thành id
+    const answers = await Answer.find({ user: userId })
+      .sort({ createdAt: -1 })
+      .populate('user', 'name nickName avatar')
+      .populate('question', '_id')
+      .select('question content createdAt upvotedBy downvotedBy')
+      .lean();
+
+    answers.forEach((ans) => {
+      ans.question = ans.question?._id || ans.question;
+    });
 
     // Đếm tổng số posts
     const totalPosts = await Question.countDocuments({ user: userId });
@@ -124,6 +163,7 @@ async function getUserProfile(userId, page = 1, limit = 10) {
         user: {
           userId: user._id,
           name: user.name,
+          avatar: user.avatar,
           nickName: user.nickName,
           email: user.email,
           status: user.status,
@@ -133,7 +173,9 @@ async function getUserProfile(userId, page = 1, limit = 10) {
           createdAt: user.createdAt,
           updatedAt: user.updatedAt,
           bio: user.bio,
+          avatar: user.avatar,
         },
+        answers: answers,
         posts: postsWithStats,
         statistics: {
           totalPosts,
@@ -197,14 +239,12 @@ async function getUserStatistics(userId) {
         },
       },
     ]);
+    console.log('Total Votes Agg:', totalVotesAgg);
     const totalVotes =
       totalVotesAgg.length > 0
-        ? {
-            upvotes: totalVotesAgg[0].totalUpvotes,
-            downvotes: totalVotesAgg[0].totalDownvotes,
-          }
-        : { upvotes: 0, downvotes: 0 };
-    const joinDate = user.createdAt;
+        ? totalVotesAgg[0].totalUpvotes + totalVotesAgg[0].totalDownvotes
+        : 0;
+    const joinDate = user.createdAt.toISOString().split('T')[0];
 
     // Lấy dữ liệu lịch sử hoạt động (số câu hỏi và câu trả lời theo ngày trong 30 ngày gần nhất)
     const thirtyDaysAgo = new Date();
