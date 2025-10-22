@@ -1,6 +1,5 @@
 const Question = require('../../models/Question.model');
 
-/* Helper functions */
 const buildDateFilter = (dateRange) => {
   const now = new Date();
   let startDate;
@@ -31,7 +30,6 @@ const getSearchCount = async (searchQuery) => {
   return await Question.countDocuments(searchQuery);
 };
 
-/* Main Repository Functions */
 exports.searchQuestions = async ({
   query,
   filters = {},
@@ -43,17 +41,11 @@ exports.searchQuestions = async ({
     let searchQuery = {};
     let sort = {};
 
-    /* Build search query */
     if (query && query.trim()) {
       searchQuery.$text = {
         $search: query,
         $caseSensitive: false,
       };
-    }
-
-    /* Apply filters */
-    if (filters.tags && filters.tags.length > 0) {
-      searchQuery.tags = { $in: filters.tags };
     }
 
     if (filters.dateRange) {
@@ -63,16 +55,6 @@ exports.searchQuestions = async ({
       }
     }
 
-    if (filters.minVotes !== undefined) {
-      searchQuery.$expr = {
-        $gte: [
-          { $subtract: [{ $size: '$upvotedBy' }, { $size: '$downvotedBy' }] },
-          filters.minVotes,
-        ],
-      };
-    }
-
-    /* Build sort criteria */
     switch (sortBy) {
       case 'date':
         sort = { askedTime: -1 };

@@ -1,10 +1,6 @@
 // services/SearchService.js
 const questionRepository = require('../../repository/search/SearchQuestion.repository');
 
-/* 
-Temporary put the helper functions here for testing with ease,
-I will move them to a helper when it woking properly.
- */
 const validateSearchParams = ({ page, limit, sortBy, dateRange }) => {
   if (page < 1 || page > 1000) {
     throw new Error('Invalid page number');
