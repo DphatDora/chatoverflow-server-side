@@ -82,9 +82,9 @@ const formatQuestionResult = (question) => ({
 const formatBlogResult = (blog) => ({
   id: blog._id,
   title: blog.title,
-  description: truncateContent(blog.content, 200),
+  description: truncateContent(blog.content_html || blog.summary, 200),
   type: 'blog',
-  url: `/blogs/${blog._id}`,
+  url: `/blog/${blog.slug}`,
   metadata: {
     author: blog.author?.username || 'Unknown',
     authorAvatar: blog.author?.avatar,
