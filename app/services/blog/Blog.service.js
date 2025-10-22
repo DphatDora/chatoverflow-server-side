@@ -262,3 +262,43 @@ exports.isBlogOwner = async (blogSlug, userId) => {
   }
   return blog.user._id.toString() === userId.toString();
 };
+
+exports.updateComment = async (commentId, userId, content) => {
+  if (!content || content.trim().length === 0) {
+    throw new Error('Comment content is required');
+  }
+
+  const comment = await blogRepository.getCommentById(commentId);
+  if (!comment) {
+    throw new Error('Comment not found');
+  }
+
+  // Check if user is the owner
+  if (comment.user._id.toString() !== userId.toString()) {
+    throw new Error('You are not authorized to edit this comment');
+  }
+
+  return await blogRepository.updateComment(commentId, content.trim());
+};
+
+exports.deleteComment = async (commentId, userId) => {
+  const comment = await blogRepository.getCommentById(commentId);
+  if (!comment) {
+    throw new Error('Comment not found');
+  }
+
+  // Check if user is the owner
+  if (comment.user._id.toString() !== userId.toString()) {
+    throw new Error('You are not authorized to delete this comment');
+  }
+
+  return await blogRepository.deleteComment(commentId);
+};
+
+exports.isCommentOwner = async (commentId, userId) => {
+  const comment = await blogRepository.getCommentById(commentId);
+  if (!comment) {
+    throw new Error('Comment not found');
+  }
+  return comment.user._id.toString() === userId.toString();
+};

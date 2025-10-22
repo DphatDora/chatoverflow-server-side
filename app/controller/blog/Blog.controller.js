@@ -284,3 +284,64 @@ exports.deleteBlog = async (req, res) => {
       .json(ApiResponse.error(error.message || 'Failed to delete blog'));
   }
 };
+
+exports.updateComment = async (req, res) => {
+  try {
+    const { commentId } = req.params;
+    const { content } = req.body;
+    const userId = req.userId;
+
+    const isOwner = await blogService.isCommentOwner(commentId, userId);
+    if (!isOwner) {
+      return res
+        .status(StatusCodes.FORBIDDEN)
+        .json(ApiResponse.error('You are not authorized to edit this comment'));
+    }
+
+    const updatedComment = await blogService.updateComment(
+      commentId,
+      userId,
+      content
+    );
+
+    res
+      .status(StatusCodes.OK)
+      .json(
+        ApiResponse.success(
+          'Comment updated successfully',
+          NewCommentResponse(updatedComment)
+        )
+      );
+  } catch (error) {
+    console.error('Update comment error:', error);
+    res
+      .status(error.statusCode || StatusCodes.BAD_REQUEST)
+      .json(ApiResponse.error(error.message || 'Failed to update comment'));
+  }
+};
+
+exports.deleteComment = async (req, res) => {
+  try {
+    const { commentId } = req.params;
+    const userId = req.userId;
+
+    const isOwner = await blogService.isCommentOwner(commentId, userId);
+    if (!isOwner) {
+      return res
+        .status(StatusCodes.FORBIDDEN)
+        .json(
+          ApiResponse.error('You are not authorized to delete this comment')
+        );
+    }
+
+    await blogService.deleteComment(commentId, userId);
+    res
+      .status(StatusCodes.OK)
+      .json(ApiResponse.success('Comment deleted successfully'));
+  } catch (error) {
+    console.error('Delete comment error:', error);
+    res
+      .status(error.statusCode || StatusCodes.BAD_REQUEST)
+      .json(ApiResponse.error(error.message || 'Failed to delete comment'));
+  }
+};

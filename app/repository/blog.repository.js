@@ -237,3 +237,28 @@ exports.deleteBlog = async (blogSlug) => {
 exports.deleteCommentsByBlog = async (blogId) => {
   return await BlogComment.deleteMany({ blog: blogId });
 };
+
+exports.updateComment = async (commentId, content) => {
+  return await BlogComment.findByIdAndUpdate(
+    commentId,
+    { content },
+    { new: true }
+  )
+    .populate('user', 'avatar nickName')
+    .populate('blog', 'title slug');
+};
+
+exports.deleteComment = async (commentId) => {
+  return await BlogComment.findByIdAndUpdate(
+    commentId,
+    { isDeleted: true },
+    { new: true }
+  );
+};
+
+exports.getCommentById = async (commentId) => {
+  return await BlogComment.findById(commentId).populate(
+    'user',
+    'avatar nickName'
+  );
+};
