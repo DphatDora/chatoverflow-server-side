@@ -21,6 +21,23 @@ const BlogSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+BlogSchema.index(
+  {
+    title: 'text',
+    content_html: 'text',
+    summary: 'text',
+    tags: 'text',
+  },
+  {
+    weights: {
+      title: 10,
+      summary: 7,
+      content_html: 5,
+      tags: 3,
+    },
+  }
+);
+
 BlogSchema.pre('save', function (next) {
   if (this.isModified('title') || this.isNew) {
     this.slug = slugify(this.title, { lower: true, strict: true });
