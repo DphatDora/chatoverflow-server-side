@@ -95,7 +95,7 @@ exports.voteBlog = async (blogSlug, userId, voteType) => {
   const updatedBlog = await blogRepository.voteBlog(blogSlug, userId, voteType);
 
   // Send notification for blog upvote
-  if (voteType === 'upvote' && updatedBlog) {
+  if (voteType === 'upvote' && updatedBlog && updatedBlog.user) {
     const blogOwnerIdString = updatedBlog.user._id.toString();
     const voterUserIdString = userId.toString();
 
@@ -142,25 +142,27 @@ exports.createComment = async (blogSlug, userId, content) => {
   const comment = await blogRepository.createComment(commentData);
 
   // Send notification to blog owner
-  const blogOwnerIdString = blog.user._id.toString();
-  const commenterIdString = userId.toString();
+  if (blog.user) {
+    const blogOwnerIdString = blog.user._id.toString();
+    const commenterIdString = userId.toString();
 
-  if (blogOwnerIdString !== commenterIdString) {
-    await NotificationService.createNotification(
-      blogOwnerIdString,
-      'new_blog_comment',
-      {
-        blogId: blog._id.toString(),
-        blogTitle: blog.title,
-        blogSlug: blog.slug,
-        commentContent:
-          content.length > 200 ? content.substring(0, 200) + '...' : content,
-        commenterId: commenterIdString,
-        blogUrl: `${
-          process.env.FRONTEND_BASE_URL || 'http://localhost:5173'
-        }/blog/${blog.slug}`,
-      }
-    );
+    if (blogOwnerIdString !== commenterIdString) {
+      await NotificationService.createNotification(
+        blogOwnerIdString,
+        'new_blog_comment',
+        {
+          blogId: blog._id.toString(),
+          blogTitle: blog.title,
+          blogSlug: blog.slug,
+          commentContent:
+            content.length > 200 ? content.substring(0, 200) + '...' : content,
+          commenterId: commenterIdString,
+          blogUrl: `${
+            process.env.FRONTEND_BASE_URL || 'http://localhost:5173'
+          }/blog/${blog.slug}`,
+        }
+      );
+    }
   }
 
   return comment;
@@ -190,7 +192,12 @@ exports.voteComment = async (commentId, userId, voteType) => {
   );
 
   // Send notification for comment upvote
-  if (voteType === 'upvote' && updatedComment) {
+  if (
+    voteType === 'upvote' &&
+    updatedComment &&
+    updatedComment.user &&
+    updatedComment.blog
+  ) {
     const commentOwnerIdString = updatedComment.user._id.toString();
     const voterUserIdString = userId.toString();
 
@@ -221,4 +228,77 @@ exports.voteComment = async (commentId, userId, voteType) => {
 
 exports.checkBlogVote = async (slug, userId) => {
   return await blogRepository.checkUserVote(slug, userId);
+};
+
+exports.deleteBlog = async (blogSlug, userId) => {
+  const blog = await blogRepository.getBlogBySlug(blogSlug);
+  if (!blog) {
+    throw new Error('Blog not found');
+  }
+
+  // Check if user is the owner
+  if (blog.user._id.toString() !== userId.toString()) {
+    throw new Error('You are not authorized to delete this blog');
+  }
+
+  try {
+    // Delete all comments related to this blog
+    await blogRepository.deleteCommentsByBlog(blog._id);
+
+    // Delete the blog
+    await blogRepository.deleteBlog(blogSlug);
+
+    return { success: true, message: 'Blog and related comments deleted' };
+  } catch (err) {
+    console.error('Failed to delete blog:', err);
+    throw new Error('Failed to delete blog and related comments');
+  }
+};
+
+exports.isBlogOwner = async (blogSlug, userId) => {
+  const blog = await blogRepository.getBlogBySlug(blogSlug);
+  if (!blog) {
+    throw new Error('Blog not found');
+  }
+  return blog.user._id.toString() === userId.toString();
+};
+
+exports.updateComment = async (commentId, userId, content) => {
+  if (!content || content.trim().length === 0) {
+    throw new Error('Comment content is required');
+  }
+
+  const comment = await blogRepository.getCommentById(commentId);
+  if (!comment) {
+    throw new Error('Comment not found');
+  }
+
+  // Check if user is the owner
+  if (comment.user._id.toString() !== userId.toString()) {
+    throw new Error('You are not authorized to edit this comment');
+  }
+
+  return await blogRepository.updateComment(commentId, content.trim());
+};
+
+exports.deleteComment = async (commentId, userId) => {
+  const comment = await blogRepository.getCommentById(commentId);
+  if (!comment) {
+    throw new Error('Comment not found');
+  }
+
+  // Check if user is the owner
+  if (comment.user._id.toString() !== userId.toString()) {
+    throw new Error('You are not authorized to delete this comment');
+  }
+
+  return await blogRepository.deleteComment(commentId);
+};
+
+exports.isCommentOwner = async (commentId, userId) => {
+  const comment = await blogRepository.getCommentById(commentId);
+  if (!comment) {
+    throw new Error('Comment not found');
+  }
+  return comment.user._id.toString() === userId.toString();
 };

@@ -201,6 +201,22 @@ class AnswerService {
       throw new Error('Failed to delete answer and related replies');
     }
   }
+  async deleteAnswersByQuestion(questionId, userId) {
+    const answers = await Answer.find({ question: questionId });
+
+    const answerIds = answers.map((answer) => answer._id);
+
+    try {
+      await Promise.all(
+        answerIds.map(async (answerId) => {
+          await this.deleteAnswer(answerId, userId);
+        })
+      );
+    } catch (error) {
+      console.error('Failed to delete replies:', error);
+      throw new Error('Failed to delete replies');
+    }
+  }
 
   async isAnswerOwner(answerId, userId) {
     const answer = await Answer.findById(answerId);

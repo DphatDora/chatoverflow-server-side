@@ -102,6 +102,7 @@ class TagService {
 
       // Normalize tag name to lowercase for case-insensitive matching
       const normalizedTagName = tagName.trim().toLowerCase();
+      console.log('Normalized tag name:', normalizedTagName);
 
       // Check if tag exists
       const tag = await Tag.findOne({ name: normalizedTagName });
@@ -111,6 +112,7 @@ class TagService {
           message: 'Tag not found',
         };
       }
+      console.log('Found tag:', tag);
 
       // Get questions by tag with pagination
       const { questions, totalCount } =
@@ -119,6 +121,7 @@ class TagService {
           page,
           limit
         );
+      console.log('Questions found:', questions);
 
       return {
         success: true,

@@ -14,6 +14,12 @@ router.put(
   questionController.editQuestion
 );
 
+router.delete(
+  '/:questionId/delete',
+  authMiddleware,
+  questionController.deletedQuestion
+);
+
 /* 
   Temporary remove authMiddleware for testing purpose.
   Expected response is questions created by specific user with userId.
