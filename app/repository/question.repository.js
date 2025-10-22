@@ -1,5 +1,4 @@
 const Question = require('../models/Question.model');
-const Answer = require('../models/Answer.model');
 
 async function getNewest(limit = 20) {
   return Question.find()

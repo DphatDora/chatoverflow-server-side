@@ -1,6 +1,7 @@
 const questionRepository = require('../../repository/question.repository');
 const Question = require('../../models/Question.model');
 const NotificationService = require('../common/notification.service');
+const AnswerService = require('./Answer.service');
 
 async function getQuestionsByType(type, limit = 20, page = 1) {
   let sortOption = {};
@@ -192,6 +193,25 @@ async function increaseViewCount(questionId) {
     totalViews: question.views,
   };
 }
+async function isQuestionOwner(questionId, userId) {
+  const question = await Question.findById(questionId);
+  if (!question) {
+    throw new Error('Question not found');
+  }
+
+  return question.user.equals(userId);
+}
+
+async function deleteQuestion(questionId, userId) {
+  const question = await Question.findByIdAndDelete(questionId);
+  if (question) {
+    // Also delete all answers associated with this question
+    await AnswerService.deleteAnswersByQuestion(questionId, userId);
+  } else {
+    throw new Error('Question not found');
+  }
+  return question;
+}
 
 module.exports = {
   getQuestionsByType,
@@ -203,4 +223,6 @@ module.exports = {
   downvoteQuestion,
   voteStatus,
   increaseViewCount,
+  isQuestionOwner,
+  deleteQuestion,
 };
