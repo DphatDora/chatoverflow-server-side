@@ -232,6 +232,8 @@ exports.checkBlogVote = async (slug, userId) => {
 
 exports.getUserVotedBlogs = async (userId) => {
   return await blogRepository.getUserVotedBlogs(userId);
+};
+
 exports.deleteBlog = async (blogSlug, userId) => {
   const blog = await blogRepository.getBlogBySlug(blogSlug);
   if (!blog) {

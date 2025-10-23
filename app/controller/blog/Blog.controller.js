@@ -277,6 +277,8 @@ exports.getUserVotedBlogs = async (req, res) => {
       .json(
         ApiResponse.error(error.message || 'Failed to fetch user voted blogs')
       );
+  }
+};
 exports.deleteBlog = async (req, res) => {
   try {
     const { blogSlug } = req.params;

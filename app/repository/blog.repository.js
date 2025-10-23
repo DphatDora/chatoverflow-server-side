@@ -235,6 +235,8 @@ exports.getUserVotedBlogs = async (userId) => {
     .sort({ createdAt: -1 })
     .populate('user', 'name avatar');
   return blogs;
+};
+
 exports.deleteBlog = async (blogSlug) => {
   return await Blog.deleteOne({ slug: blogSlug });
 };

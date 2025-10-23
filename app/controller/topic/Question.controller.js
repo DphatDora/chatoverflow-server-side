@@ -219,6 +219,11 @@ async function getUserVotedQuestions(req, res) {
     const userId = req.params.userId;
     const result = await questionService.getUserVotedQuestions(userId);
     return res.json(ApiResponse.success('User voted questions', result));
+  } catch (err) {
+    console.error(err);
+    return res.status(400).json(ApiResponse.error(err.message));
+  }
+}
 async function deletedQuestion(req, res) {
   try {
     const { questionId } = req.params;
