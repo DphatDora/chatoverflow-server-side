@@ -86,6 +86,7 @@ class TagController {
   static async getQuestionsByTag(req, res) {
     try {
       const { tagName } = req.params;
+      console.log('Requested tagName:', tagName);
       const page = parseInt(req.query.page, 10) || 1;
       const limit = req.query.limit ? parseInt(req.query.limit, 10) : 20;
 

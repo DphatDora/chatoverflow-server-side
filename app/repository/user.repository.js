@@ -4,7 +4,7 @@ class UserRepository {
     const skip = (page - 1) * limit;
 
     const matchStage = {
-      status: { $in: ['active', 'inactive'] },
+      status: { $in: ['active'] },
     };
 
     if (search) {
@@ -52,7 +52,7 @@ class UserRepository {
 
   async countUsers(search) {
     const query = {
-      status: { $in: ['active', 'inactive'] },
+      status: { $in: ['active'] },
     };
 
     if (search) {
