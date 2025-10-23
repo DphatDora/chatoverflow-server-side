@@ -177,8 +177,6 @@ async function getUserPosts(userId, page = 1, limit = 10) {
         (post.downvotedBy ? post.downvotedBy.length : 0),
     }));
 
-    console.log('Posts with stats with page:', page, postsWithStats);
-
     return {
       success: true,
       message: 'Lấy danh sách bài viết thành công',
