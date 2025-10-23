@@ -35,3 +35,5 @@ const upload = multer({
 });
 
 module.exports = upload;
+
+/* localhost:3000/upload/blog/1761197541182-722339570.jpg */
