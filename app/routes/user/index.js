@@ -6,6 +6,8 @@ router.use('/get-my-info', auth, require('./info'));
 router.use('/edit', auth, require('./info'));
 router.use('/profile', require('./profile')); // Đặt trước route '/'
 router.use('/statistics', auth, require('./statistics'));
+router.use('/:userId/posts', auth, require('./posts'));
+router.use('/:userId/answers', auth, require('./answers'));
 router.use('/', require('./get')); // Route này phải đặt cuối
 // router.use("/blocked", auth, require("./blocked"));
 // router.use("/friend", auth, require("./friend"));

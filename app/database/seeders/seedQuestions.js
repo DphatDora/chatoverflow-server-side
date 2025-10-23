@@ -37,6 +37,7 @@ const seedQuestions = async () => {
     }
 
     await Question.insertMany(questionsData);
+    await Question.createManyWithTags(questionsData);
     console.log('✅ 60 questions inserted');
 
     await mongoose.disconnect();

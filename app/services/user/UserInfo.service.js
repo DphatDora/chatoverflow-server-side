@@ -74,7 +74,7 @@ async function updateUserInfo(userId, updateData) {
   }
 }
 
-async function getUserProfile(userId, page = 1, limit = 10) {
+async function getUserProfile(userId) {
   try {
     // Validate ObjectId
     if (!mongoose.Types.ObjectId.isValid(userId)) {
@@ -90,8 +90,6 @@ async function getUserProfile(userId, page = 1, limit = 10) {
       '-password -tempPasswordHash -__v'
     );
 
-    console.log('User found:', !!user);
-
     if (!user || user.status !== 'active') {
       console.log('User not found or inactive, status:', user?.status);
       return {
@@ -102,59 +100,11 @@ async function getUserProfile(userId, page = 1, limit = 10) {
       };
     }
 
-    // Tính pagination cho danh sách posts
-    const skip = (page - 1) * limit;
-
-    // Lấy danh sách posts của user với pagination
-    const posts = await Question.find({ user: userId })
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(limit)
-      .populate('user', 'name nickName avatar')
-      .select('title content tags askedTime views upvotedBy downvotedBy')
-      .lean();
-
-    // Lấy answerCount cho tất cả posts một lần
-    const postIds = posts.map((post) => post._id);
-    const answerCounts = await Answer.aggregate([
-      { $match: { question: { $in: postIds } } },
-      { $group: { _id: '$question', count: { $sum: 1 } } },
-    ]);
-    const answerCountMap = {};
-    answerCounts.forEach((item) => {
-      answerCountMap[item._id.toString()] = item.count;
-    });
-    posts.forEach((post) => {
-      post.answerCount = answerCountMap[post._id.toString()] || 0;
-    });
-
-    // Lấy tất cả answers của user và chuyển question thành id
-    const answers = await Answer.find({ user: userId })
-      .sort({ createdAt: -1 })
-      .populate('user', 'name nickName avatar')
-      .populate('question', '_id')
-      .select('question content createdAt upvotedBy downvotedBy')
-      .lean();
-
-    answers.forEach((ans) => {
-      ans.question = ans.question?._id || ans.question;
-    });
-
     // Đếm tổng số posts
     const totalPosts = await Question.countDocuments({ user: userId });
 
     // Đếm tổng số answers
     const totalAnswers = await Answer.countDocuments({ user: userId });
-
-    // Tính toán thống kê cho mỗi post
-    const postsWithStats = posts.map((post) => ({
-      ...post,
-      upvotes: post.upvotedBy ? post.upvotedBy.length : 0,
-      downvotes: post.downvotedBy ? post.downvotedBy.length : 0,
-      score:
-        (post.upvotedBy ? post.upvotedBy.length : 0) -
-        (post.downvotedBy ? post.downvotedBy.length : 0),
-    }));
 
     return {
       success: true,
@@ -175,20 +125,10 @@ async function getUserProfile(userId, page = 1, limit = 10) {
           bio: user.bio,
           avatar: user.avatar,
         },
-        answers: answers,
-        posts: postsWithStats,
         statistics: {
           totalPosts,
           totalAnswers,
           totalContributions: totalPosts + totalAnswers,
-        },
-        pagination: {
-          currentPage: page,
-          totalPages: Math.ceil(totalPosts / limit),
-          totalItems: totalPosts,
-          itemsPerPage: limit,
-          hasNextPage: page < Math.ceil(totalPosts / limit),
-          hasPrevPage: page > 1,
         },
       },
     };
@@ -200,7 +140,95 @@ async function getUserProfile(userId, page = 1, limit = 10) {
     };
   }
 }
+async function getUserPosts(userId, page = 1, limit = 10) {
+  try {
+    // Validate ObjectId
+    const skip = (page - 1) * limit;
 
+    // Lấy danh sách posts của user với pagination
+    const posts = await Question.find({ user: userId })
+      .sort({ createdAt: -1, _id: -1 })
+      .skip(skip)
+      .limit(limit)
+      .populate('user', 'name nickName avatar')
+      .select('title content tags askedTime views upvotedBy downvotedBy')
+      .lean();
+
+    // Lấy answerCount cho tất cả posts một lần
+    const postIds = posts.map((post) => post._id);
+    const answerCounts = await Answer.aggregate([
+      { $match: { question: { $in: postIds } } },
+      { $group: { _id: '$question', count: { $sum: 1 } } },
+    ]);
+    const answerCountMap = {};
+    answerCounts.forEach((item) => {
+      answerCountMap[item._id.toString()] = item.count;
+    });
+    posts.forEach((post) => {
+      post.answerCount = answerCountMap[post._id.toString()] || 0;
+    });
+    // Tính toán thống kê cho mỗi post
+    const postsWithStats = posts.map((post) => ({
+      ...post,
+      upvotes: post.upvotedBy ? post.upvotedBy.length : 0,
+      downvotes: post.downvotedBy ? post.downvotedBy.length : 0,
+      score:
+        (post.upvotedBy ? post.upvotedBy.length : 0) -
+        (post.downvotedBy ? post.downvotedBy.length : 0),
+    }));
+
+    console.log('Posts with stats with page:', page, postsWithStats);
+
+    return {
+      success: true,
+      message: 'Lấy danh sách bài viết thành công',
+      data: {
+        posts: postsWithStats,
+        totalPosts: await Question.countDocuments({ user: userId }),
+      },
+    };
+  } catch (error) {
+    console.error('Get user posts error:', error);
+    return {
+      success: false,
+      message: 'Lỗi hệ thống khi lấy danh sách bài viết',
+    };
+  }
+}
+
+async function getUserAnswers(userId, page = 1, limit = 10) {
+  try {
+    const skip = (page - 1) * limit;
+    const answers = await Answer.find({ user: userId })
+      .sort({ createdAt: -1, _id: -1 })
+      .populate('user', 'name nickName avatar')
+      .populate('question', '_id')
+      .skip(skip)
+      .limit(limit)
+      .select('question content createdAt upvotedBy downvotedBy')
+      .lean();
+
+    answers.forEach((ans) => {
+      ans.question = ans.question?._id || ans.question;
+    });
+    const totalAnswers = await Answer.countDocuments({ user: userId });
+
+    return {
+      success: true,
+      message: 'Lấy danh sách câu trả lời thành công',
+      data: {
+        answers,
+        totalAnswers,
+      },
+    };
+  } catch (error) {
+    console.error('Get user answers error:', error);
+    return {
+      success: false,
+      message: 'Lỗi hệ thống khi lấy danh sách câu trả lời',
+    };
+  }
+}
 async function getUserStatistics(userId) {
   try {
     const user = await User.findById(userId);
@@ -329,4 +357,10 @@ async function getUserStatistics(userId) {
   }
 }
 
-module.exports = { updateUserInfo, getUserProfile, getUserStatistics };
+module.exports = {
+  updateUserInfo,
+  getUserProfile,
+  getUserStatistics,
+  getUserPosts,
+  getUserAnswers,
+};
