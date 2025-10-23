@@ -65,8 +65,8 @@ exports.getUserPosts = async (req, res) => {
         .status(400)
         .json(ApiResponse.error('Tham số phân trang không hợp lệ'));
     }
-    const result = await userInfoService.getUserPosts(req.userId, page, limit);
-    console.log('result:', result);
+    const userId = req.params.userId;
+    const result = await userInfoService.getUserPosts(userId, page, limit);
 
     if (!result.success) {
       return res.status(400).json(ApiResponse.error(result.message));
@@ -101,11 +101,9 @@ exports.getUserAnswers = async (req, res) => {
         .status(400)
         .json(ApiResponse.error('Tham số phân trang không hợp lệ'));
     }
-    const result = await userInfoService.getUserAnswers(
-      req.userId,
-      page,
-      limit
-    );
+    const userId = req.params.userId;
+    console.log('userId:', userId);
+    const result = await userInfoService.getUserAnswers(userId, page, limit);
 
     if (!result.success) {
       return res.status(400).json(ApiResponse.error(result.message));
