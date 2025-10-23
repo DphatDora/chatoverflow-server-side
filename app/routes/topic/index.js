@@ -25,6 +25,7 @@ router.delete(
   Expected response is questions created by specific user with userId.
 */
 router.get('/user/:userId', questionController.getUserQuestions);
+router.get('/voted/:userId', questionController.getUserVotedQuestions);
 // router.get(
 //   '/user/:userId',
 //   authMiddleware,

@@ -169,6 +169,7 @@ async function upvoteQuestion(req, res) {
     return res.status(400).json(ApiResponse.error(err.message));
   }
 }
+
 async function downvoteQuestion(req, res) {
   try {
     const { questionId } = req.params;
@@ -182,6 +183,7 @@ async function downvoteQuestion(req, res) {
     return res.status(400).json(ApiResponse.error(err.message));
   }
 }
+
 async function voteStatus(req, res) {
   try {
     const { questionId } = req.params;
@@ -212,6 +214,11 @@ async function increaseView(req, res) {
   }
 }
 
+async function getUserVotedQuestions(req, res) {
+  try {
+    const userId = req.params.userId;
+    const result = await questionService.getUserVotedQuestions(userId);
+    return res.json(ApiResponse.success('User voted questions', result));
 async function deletedQuestion(req, res) {
   try {
     const { questionId } = req.params;
@@ -244,5 +251,6 @@ module.exports = {
   downvoteQuestion,
   voteStatus,
   increaseView,
+  getUserVotedQuestions,
   deletedQuestion,
 };

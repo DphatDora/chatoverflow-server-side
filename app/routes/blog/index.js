@@ -74,4 +74,6 @@ router.get(
 router.get('/:blogSlug/comments', blogController.getComments);
 router.get('/:blogSlug', blogController.getBlogDetail);
 
+router.get('/voted/:userId', blogController.getUserVotedBlogs);
+
 module.exports = router;

@@ -230,6 +230,11 @@ exports.checkUserVote = async (blogSlug, userId) => {
   return { isUpvoted, isDownvoted };
 };
 
+exports.getUserVotedBlogs = async (userId) => {
+  const blogs = await Blog.find({ upvotedBy: userId })
+    .sort({ createdAt: -1 })
+    .populate('user', 'name avatar');
+  return blogs;
 exports.deleteBlog = async (blogSlug) => {
   return await Blog.deleteOne({ slug: blogSlug });
 };

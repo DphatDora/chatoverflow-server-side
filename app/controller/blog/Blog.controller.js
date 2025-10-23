@@ -261,6 +261,22 @@ exports.checkBlogVote = async (req, res) => {
   }
 };
 
+exports.getUserVotedBlogs = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const blogs = await blogService.getUserVotedBlogs(userId);
+    res
+      .status(StatusCodes.OK)
+      .json(
+        ApiResponse.success('User voted blogs retrieved successfully', blogs)
+      );
+  } catch (error) {
+    console.error('Get user voted blogs error:', error);
+    res
+      .status(StatusCodes.INTERNAL_SERVER_ERROR)
+      .json(
+        ApiResponse.error(error.message || 'Failed to fetch user voted blogs')
+      );
 exports.deleteBlog = async (req, res) => {
   try {
     const { blogSlug } = req.params;

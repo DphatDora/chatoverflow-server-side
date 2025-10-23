@@ -168,6 +168,13 @@ async function getQuestionsByTag(tagName, page = 1, limit = 20) {
   };
 }
 
+async function getUserVotedQuestions(userId) {
+  const questions = await Question.find({ upvotedBy: userId })
+    .sort({ createdAt: -1 })
+    .populate('user', 'name avatar')
+    .populate('answerCount');
+  return questions;
+}
 module.exports = {
   getNewest,
   getTrending,
@@ -175,4 +182,5 @@ module.exports = {
   getQuestionDetailById,
   getQuestionsByUserId,
   getQuestionsByTag,
+  getUserVotedQuestions,
 };
