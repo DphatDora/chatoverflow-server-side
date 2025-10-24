@@ -11,38 +11,40 @@ class SignupInitiateRequest {
 
     // Validate name
     if (!this.name || this.name.trim().length === 0) {
-      errors.push("Tên không được để trống");
+      errors.push('Name must not be empty');
     } else if (this.name.trim().length < 2) {
-      errors.push("Tên phải có ít nhất 2 ký tự");
+      errors.push('Name must be at least 2 characters long');
     } else if (this.name.trim().length > 50) {
-      errors.push("Tên không được vượt quá 50 ký tự");
+      errors.push('Name must not exceed 50 characters');
     }
 
     // Validate nickName
     if (!this.nickName || this.nickName.trim().length === 0) {
-      errors.push("Tên hiển thị không được để trống");
+      errors.push('Display name must not be empty');
     } else if (this.nickName.trim().length < 3) {
-      errors.push("Tên hiển thị phải có ít nhất 3 ký tự");
+      errors.push('Display name must be at least 3 characters long');
     } else if (this.nickName.trim().length > 20) {
-      errors.push("Tên hiển thị không được vượt quá 20 ký tự");
+      errors.push('Display name must not exceed 20 characters');
     } else if (!/^[a-zA-Z0-9_]+$/.test(this.nickName.trim())) {
-      errors.push("Tên hiển thị chỉ được chứa chữ cái, số và dấu gạch dưới");
+      errors.push(
+        'Display name must contain only letters, numbers, and underscores'
+      );
     }
 
     // Validate email
     if (!this.email || this.email.trim().length === 0) {
-      errors.push("Email không được để trống");
+      errors.push('Email must not be empty');
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.email.trim())) {
-      errors.push("Email không hợp lệ");
+      errors.push('Email is not valid');
     }
 
     // Validate password
     if (!this.password || this.password.length === 0) {
-      errors.push("Mật khẩu không được để trống");
+      errors.push('Password must not be empty');
     } else if (this.password.length < 6) {
-      errors.push("Mật khẩu phải có ít nhất 6 ký tự");
+      errors.push('Password must be at least 6 characters long');
     } else if (this.password.length > 100) {
-      errors.push("Mật khẩu không được vượt quá 100 ký tự");
+      errors.push('Password must not exceed 100 characters');
     }
 
     return {
@@ -73,16 +75,16 @@ class SignupVerifyRequest {
 
     // Validate email
     if (!this.email || this.email.trim().length === 0) {
-      errors.push("Email không được để trống");
+      errors.push('Email must not be empty');
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.email.trim())) {
-      errors.push("Email không hợp lệ");
+      errors.push('Email is not valid');
     }
 
     // Validate OTP
     if (!this.otp || this.otp.trim().length === 0) {
-      errors.push("Mã OTP không được để trống");
+      errors.push('OTP must not be empty');
     } else if (!/^\d{6}$/.test(this.otp.trim())) {
-      errors.push("Mã OTP phải là 6 chữ số");
+      errors.push('OTP must be 6 digits');
     }
 
     return {
