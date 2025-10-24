@@ -1,17 +1,17 @@
-const bcrypt = require("bcrypt");
-const User = require("../../models/User.model");
-const UserVerification = require("../../models/User.PasswordReset.model");
-const OTPService = require("../common/OTP.service");
+const bcrypt = require('bcrypt');
+const User = require('../../models/User.model');
+const UserVerification = require('../../models/User.PasswordReset.model');
+const OTPService = require('../common/OTP.service');
 
 async function initiateSignup(name, nickName, email, password) {
   try {
     // Check if email already exists in verified User collection
     const existingUser = await User.findOne({
       email,
-      status: { $in: ["active", "inactive"] },
+      status: { $in: ['active', 'inactive'] },
     });
     if (existingUser) {
-      throw new Error("Email đã được đăng ký");
+      throw new Error('Email has already been registered');
     }
 
     // Hash password
@@ -24,7 +24,7 @@ async function initiateSignup(name, nickName, email, password) {
         name,
         nickName,
         email,
-        status: "pending",
+        status: 'pending',
         tempPasswordHash: passwordHash,
       },
       { upsert: true, new: true }
@@ -35,23 +35,23 @@ async function initiateSignup(name, nickName, email, password) {
       email,
       User,
       UserVerification,
-      "signup",
+      'signup',
       {
-        userQuery: { status: "pending" },
-        userNotFoundMessage: "Không tìm thấy yêu cầu đăng ký",
+        userQuery: { status: 'pending' },
+        userNotFoundMessage: 'No pending signup found for this email.',
       }
     );
 
     if (!emailResult.success) {
       // Clean up if email fails
-      await User.deleteOne({ _id: tempUser._id, status: "pending" });
+      await User.deleteOne({ _id: tempUser._id, status: 'pending' });
       await UserVerification.deleteOne({ userId: tempUser._id });
       throw new Error(emailResult.message);
     }
 
     return {
       message:
-        "OTP đã được gửi đến email của bạn. Vui lòng kiểm tra và xác thực.",
+        'OTP has been sent to your email. Please verify to complete registration.',
       data: { email },
     };
   } catch (error) {
@@ -68,7 +68,7 @@ async function verifySignup(email, otpInput) {
       User,
       UserVerification,
       {
-        userQuery: { status: "pending" },
+        userQuery: { status: 'pending' },
         maxAttempts: 5,
       }
     );
@@ -81,7 +81,7 @@ async function verifySignup(email, otpInput) {
 
     // Update user status to active and store password directly
     await User.findByIdAndUpdate(user._id, {
-      status: "active",
+      status: 'active',
       password: user.tempPasswordHash,
       $unset: { tempPasswordHash: 1 },
     });
@@ -90,7 +90,7 @@ async function verifySignup(email, otpInput) {
     await UserVerification.deleteOne({ userId: user._id });
 
     return {
-      message: "Đăng ký thành công! Bạn có thể đăng nhập ngay bây giờ.",
+      message: 'Registration successful. Your account is now active.',
       data: {
         userId: user._id,
         email: user.email,
