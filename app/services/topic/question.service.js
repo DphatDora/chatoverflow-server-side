@@ -28,6 +28,7 @@ async function getQuestionsByType(type, limit = 20, page = 1) {
       .skip(skip)
       .limit(limit)
       .populate('user', 'name avatar')
+      .populate('answerCount')
       .lean(),
     Question.countDocuments(),
   ]);
