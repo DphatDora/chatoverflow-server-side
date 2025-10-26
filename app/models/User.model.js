@@ -25,6 +25,11 @@ const UserSchema = new mongoose.Schema(
       enum: ['male', 'female', 'other'],
       default: 'other',
     },
+    role: {
+      type: String,
+      enum: ['user', 'admin'],
+      default: 'user',
+    },
     status: {
       type: String,
 
@@ -45,3 +50,4 @@ UserSchema.methods.comparePassword = function (plain) {
 };
 
 module.exports = mongoose.model('User', UserSchema);
+
