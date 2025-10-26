@@ -19,5 +19,4 @@ router.use('/answer', require('./answer'));
 router.use('/reply', require('./reply'));
 router.use('/notifications', require('./notification'));
 
-
 module.exports = router;

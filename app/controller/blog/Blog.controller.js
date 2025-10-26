@@ -1,4 +1,4 @@
-const blogService = require('../../services/blog/blog.service');
+const blogService = require('../../services/blog/Blog.service');
 const ApiResponse = require('../../dto/res/api.response');
 const {
   NewBlogItemResponse,
